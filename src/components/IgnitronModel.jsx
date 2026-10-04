@@ -112,7 +112,14 @@ function CyberRing() {
  * - Silky floating motion
  * - Hover & proximity response
  */
-export default function IgnitronModel({ mouseX, mouseY, isHovered }) {
+export default function IgnitronModel({
+  mouseX,
+  mouseY,
+  isHovered,
+  dragRotRef,
+  velocityRef,
+  isDraggingRef,
+}) {
   const groupRef = useRef();
   const { scene } = useGLTF('/models/MeshEntity.glb');
 
@@ -141,36 +148,60 @@ export default function IgnitronModel({ mouseX, mouseY, isHovered }) {
   }, [scene]);
 
   // Target and current values for smooth lerping
-  const targetRotY = useRef(0);
-  const targetRotX = useRef(0);
-  const currentRotY = useRef(0);
-  const currentRotX = useRef(0);
+  const targetTiltY = useRef(0);
+  const targetTiltX = useRef(0);
+  const currentTiltY = useRef(0);
+  const currentTiltX = useRef(0);
   const currentScale = useRef(1);
 
   useFrame((state) => {
     const t = state.clock.elapsedTime;
 
-    // Mouse interactive target rotation
-    targetRotY.current = (mouseX ?? 0) * 0.75;
-    targetRotX.current = -(mouseY ?? 0) * 0.45;
+    // 1. Drag & Inertia Physics (rotates 360 degrees on mobile touch & desktop drag)
+    if (dragRotRef?.current && velocityRef?.current) {
+      if (!isDraggingRef?.current) {
+        // Apply friction to velocity or maintain graceful ambient spin
+        if (Math.abs(velocityRef.current.y) > 0.0001) {
+          dragRotRef.current.y += velocityRef.current.y;
+          velocityRef.current.y *= 0.93; // Smooth damping
+        } else {
+          // Graceful continuous ambient auto-spin when idle
+          dragRotRef.current.y += 0.006;
+        }
 
-    // Smooth lerp (interpolation)
-    const lerpSpeed = 0.05;
-    currentRotY.current += (targetRotY.current - currentRotY.current) * lerpSpeed;
-    currentRotX.current += (targetRotX.current - currentRotX.current) * lerpSpeed;
+        if (Math.abs(velocityRef.current.x) > 0.0001) {
+          dragRotRef.current.x = Math.max(-0.6, Math.min(0.6, dragRotRef.current.x + velocityRef.current.x));
+          velocityRef.current.x *= 0.93;
+        } else {
+          // Slowly ease vertical pitch back towards neutral
+          dragRotRef.current.x += (0 - dragRotRef.current.x) * 0.025;
+        }
+      }
+    }
 
-    // Hover scale boost
+    // 2. Cursor/touch position tilt
+    targetTiltY.current = (mouseX ?? 0) * 0.35;
+    targetTiltX.current = -(mouseY ?? 0) * 0.22;
+
+    const lerpSpeed = 0.06;
+    currentTiltY.current += (targetTiltY.current - currentTiltY.current) * lerpSpeed;
+    currentTiltX.current += (targetTiltX.current - currentTiltX.current) * lerpSpeed;
+
+    // 3. Hover scale boost
     const baseTargetScale = isHovered ? 1.06 : 1.0;
     currentScale.current += (baseTargetScale - currentScale.current) * 0.06;
 
     if (groupRef.current) {
-      // Rotation: Continuous subtle auto-spin + mouse follow
-      groupRef.current.rotation.y = currentRotY.current + t * 0.09;
-      groupRef.current.rotation.x = currentRotX.current + Math.sin(t * 0.4) * 0.05;
+      const dragY = dragRotRef?.current?.y ?? (t * 0.09);
+      const dragX = dragRotRef?.current?.x ?? 0;
+
+      // Full 360-degree rotation + tilt + subtle breathing wave
+      groupRef.current.rotation.y = dragY + currentTiltY.current;
+      groupRef.current.rotation.x = dragX + currentTiltX.current + Math.sin(t * 0.4) * 0.04;
 
       // Mouse distance subtle scale
       const mouseDist = Math.sqrt((mouseX ?? 0) ** 2 + (mouseY ?? 0) ** 2);
-      const proximityScale = 1 + mouseDist * 0.04;
+      const proximityScale = 1 + mouseDist * 0.03;
       groupRef.current.scale.setScalar(currentScale.current * proximityScale);
 
       // Fast cached emissive pulse without tree traversal

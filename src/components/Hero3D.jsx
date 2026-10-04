@@ -98,26 +98,151 @@ class WebGLErrorBoundary extends Component {
 }
 
 /**
- * Hero3D canvas component with WebGL context loss protection
+ * Hero3D canvas component with WebGL context loss protection,
+ * full mobile touch & desktop drag 360-degree rotation, and momentum physics
  */
 export default function Hero3D() {
   const containerRef = useRef(null);
   const [mouse, setMouse] = useState({ x: 0, y: 0 });
   const [isHovered, setIsHovered] = useState(false);
   const [contextKey, setContextKey] = useState(0);
+  const [hasInteracted, setHasInteracted] = useState(false);
 
-  // Track mouse smoothly across the screen or container
+  // Rotation and momentum physics refs passed to IgnitronModel (no React re-renders during 60fps drag)
+  const dragRotRef = useRef({ x: 0, y: 0 });
+  const velocityRef = useRef({ x: 0, y: 0 });
+  const isDraggingRef = useRef(false);
+
   useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    let lastX = 0;
+    let lastY = 0;
+    let startX = 0;
+    let startY = 0;
+    let isTouchActive = false;
+    let isHorizontalGesture = false;
+
+    // --- MOBILE TOUCH LISTENERS ---
+    const handleTouchStart = (e) => {
+      if (e.touches.length === 1) {
+        const touch = e.touches[0];
+        lastX = touch.clientX;
+        lastY = touch.clientY;
+        startX = touch.clientX;
+        startY = touch.clientY;
+        isTouchActive = true;
+        isHorizontalGesture = false;
+        isDraggingRef.current = true;
+        velocityRef.current = { x: 0, y: 0 };
+        setIsHovered(true);
+        setHasInteracted(true);
+      }
+    };
+
+    const handleTouchMove = (e) => {
+      if (!isTouchActive || e.touches.length !== 1) return;
+      const touch = e.touches[0];
+      const dx = touch.clientX - lastX;
+      const dy = touch.clientY - lastY;
+      lastX = touch.clientX;
+      lastY = touch.clientY;
+
+      const totalX = Math.abs(touch.clientX - startX);
+      const totalY = Math.abs(touch.clientY - startY);
+
+      // If user drags horizontally or with rotation intent, prioritize 3D model rotation
+      if (!isHorizontalGesture && totalX > 6 && totalX >= totalY) {
+        isHorizontalGesture = true;
+      }
+
+      if (isHorizontalGesture && e.cancelable) {
+        e.preventDefault();
+      }
+
+      // Rotate model smoothly (360 degrees horizontal, bounded vertical tilt)
+      const sensitivity = 0.009;
+      dragRotRef.current.y += dx * sensitivity;
+      dragRotRef.current.x = Math.max(-0.6, Math.min(0.6, dragRotRef.current.x + dy * (sensitivity * 0.7)));
+
+      velocityRef.current = {
+        y: dx * sensitivity,
+        x: dy * (sensitivity * 0.7),
+      };
+
+      // Also update normalized tilt relative to center
+      const rect = container.getBoundingClientRect();
+      const centerX = rect.left + rect.width / 2;
+      const centerY = rect.top + rect.height / 2;
+      const nx = Math.max(-1.5, Math.min(1.5, (touch.clientX - centerX) / (rect.width / 2)));
+      const ny = Math.max(-1.5, Math.min(1.5, (touch.clientY - centerY) / (rect.height / 2)));
+      setMouse({ x: nx, y: ny });
+    };
+
+    const handleTouchEnd = () => {
+      if (isTouchActive) {
+        isTouchActive = false;
+        isDraggingRef.current = false;
+        setIsHovered(false);
+      }
+    };
+
+    // --- DESKTOP MOUSE / POINTER DRAG ---
+    let isPointerDown = false;
+
+    const handlePointerDown = (e) => {
+      if (e.pointerType === 'touch') return; // Handled cleanly by touch listeners
+      isPointerDown = true;
+      isDraggingRef.current = true;
+      lastX = e.clientX;
+      lastY = e.clientY;
+      velocityRef.current = { x: 0, y: 0 };
+      setIsHovered(true);
+      setHasInteracted(true);
+      try {
+        container.setPointerCapture(e.pointerId);
+      } catch (err) {}
+    };
+
+    const handlePointerMove = (e) => {
+      if (e.pointerType === 'touch') return;
+      if (isPointerDown) {
+        const dx = e.clientX - lastX;
+        const dy = e.clientY - lastY;
+        lastX = e.clientX;
+        lastY = e.clientY;
+
+        const sensitivity = 0.008;
+        dragRotRef.current.y += dx * sensitivity;
+        dragRotRef.current.x = Math.max(-0.6, Math.min(0.6, dragRotRef.current.x + dy * (sensitivity * 0.7)));
+
+        velocityRef.current = {
+          y: dx * sensitivity,
+          x: dy * (sensitivity * 0.7),
+        };
+      }
+    };
+
+    const handlePointerUp = (e) => {
+      if (e.pointerType === 'touch') return;
+      if (isPointerDown) {
+        isPointerDown = false;
+        isDraggingRef.current = false;
+        try {
+          container.releasePointerCapture(e.pointerId);
+        } catch (err) {}
+      }
+    };
+
+    // Global desktop mouse move (for gentle hover parallax tilt)
     const handleGlobalMouseMove = (e) => {
-      if (!containerRef.current) return;
-      const rect = containerRef.current.getBoundingClientRect();
+      const rect = container.getBoundingClientRect();
       const centerX = rect.left + rect.width / 2;
       const centerY = rect.top + rect.height / 2;
 
-      // Distance from center of 3D container, clamped to -1.5..1.5
       const x = Math.max(-1.5, Math.min(1.5, (e.clientX - centerX) / (rect.width / 2)));
       const y = Math.max(-1.5, Math.min(1.5, (e.clientY - centerY) / (rect.height / 2)));
-
       setMouse({ x, y });
 
       const hovered =
@@ -125,11 +250,48 @@ export default function Hero3D() {
         e.clientX <= rect.right &&
         e.clientY >= rect.top &&
         e.clientY <= rect.bottom;
-      setIsHovered(hovered);
+      if (!isPointerDown) setIsHovered(hovered);
     };
 
+    // Global touch position tilt tracking
+    const handleGlobalTouchMove = (e) => {
+      if (isTouchActive || e.touches.length === 0) return;
+      const touch = e.touches[0];
+      const rect = container.getBoundingClientRect();
+      const centerX = rect.left + rect.width / 2;
+      const centerY = rect.top + rect.height / 2;
+      const nx = Math.max(-1.5, Math.min(1.5, (touch.clientX - centerX) / (rect.width / 2)));
+      const ny = Math.max(-1.5, Math.min(1.5, (touch.clientY - centerY) / (rect.height / 2)));
+      setMouse({ x: nx, y: ny });
+    };
+
+    container.addEventListener('touchstart', handleTouchStart, { passive: true });
+    container.addEventListener('touchmove', handleTouchMove, { passive: false });
+    container.addEventListener('touchend', handleTouchEnd, { passive: true });
+    container.addEventListener('touchcancel', handleTouchEnd, { passive: true });
+
+    container.addEventListener('pointerdown', handlePointerDown);
+    container.addEventListener('pointermove', handlePointerMove);
+    container.addEventListener('pointerup', handlePointerUp);
+    container.addEventListener('pointercancel', handlePointerUp);
+
     window.addEventListener('mousemove', handleGlobalMouseMove, { passive: true });
-    return () => window.removeEventListener('mousemove', handleGlobalMouseMove);
+    window.addEventListener('touchmove', handleGlobalTouchMove, { passive: true });
+
+    return () => {
+      container.removeEventListener('touchstart', handleTouchStart);
+      container.removeEventListener('touchmove', handleTouchMove);
+      container.removeEventListener('touchend', handleTouchEnd);
+      container.removeEventListener('touchcancel', handleTouchEnd);
+
+      container.removeEventListener('pointerdown', handlePointerDown);
+      container.removeEventListener('pointermove', handlePointerMove);
+      container.removeEventListener('pointerup', handlePointerUp);
+      container.removeEventListener('pointercancel', handlePointerUp);
+
+      window.removeEventListener('mousemove', handleGlobalMouseMove);
+      window.removeEventListener('touchmove', handleGlobalTouchMove);
+    };
   }, []);
 
   return (
@@ -140,6 +302,12 @@ export default function Hero3D() {
     >
       {/* Outer ambient glow halo */}
       <div className={`hero-3d-glow ${isHovered ? 'hero-3d-glow--active' : ''}`} />
+
+      {/* Interactive touch / drag hint pill */}
+      <div className={`hero-3d-hint ${hasInteracted ? 'hero-3d-hint--hidden' : ''}`}>
+        <span className="hero-3d-hint-icon">✦</span>
+        <span>Touch & Drag to Rotate</span>
+      </div>
 
       <WebGLErrorBoundary>
         <Canvas
@@ -181,6 +349,9 @@ export default function Hero3D() {
               mouseX={mouse.x}
               mouseY={mouse.y}
               isHovered={isHovered}
+              dragRotRef={dragRotRef}
+              velocityRef={velocityRef}
+              isDraggingRef={isDraggingRef}
             />
           </Suspense>
         </Canvas>

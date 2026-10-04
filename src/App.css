@@ -252,7 +252,8 @@ img {
   height: 100%;
   display: flex;
   align-items: center;
-  gap: 24px;
+  justify-content: space-between;
+  gap: 20px;
 }
 
 .nav-logo {
@@ -346,6 +347,7 @@ img {
   align-items: center;
   gap: 12px;
   flex-shrink: 0;
+  margin-left: auto;
 }
 
 /* Glass Brochure Button */
@@ -378,7 +380,7 @@ img {
   font-family: var(--font-body);
   font-weight: 600;
   font-size: 0.875rem;
-  padding: 9px 22px;
+  padding: 9px 20px;
   border-radius: var(--radius-md);
   background: linear-gradient(135deg, var(--cyan) 0%, var(--emerald) 100%);
   color: #030712;
@@ -388,6 +390,7 @@ img {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  white-space: nowrap;
 }
 .btn-register:hover {
   transform: translateY(-2px);
@@ -397,17 +400,43 @@ img {
 
 .hamburger {
   display: none;
-  background: rgba(0, 230, 118, 0.1);
-  border: 1px solid var(--glass-border);
-  color: var(--text-primary);
-  padding: 8px;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  min-width: 42px;
+  min-height: 42px;
+  padding: 0;
+  margin: 0;
+  background: rgba(0, 230, 118, 0.08);
+  border: 1px solid rgba(0, 230, 118, 0.35);
+  color: #F8FAFC;
   border-radius: var(--radius-sm);
   backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  cursor: pointer;
   transition: var(--transition);
+  box-sizing: border-box;
+  flex-shrink: 0;
+  line-height: 0;
+  appearance: none;
+  -webkit-appearance: none;
+  outline: none;
 }
-.hamburger:hover {
+.hamburger:hover,
+.hamburger:focus-visible {
   background: rgba(0, 230, 118, 0.2);
   border-color: var(--emerald);
+  box-shadow: 0 0 18px rgba(0, 230, 118, 0.38);
+}
+.hamburger svg {
+  display: block;
+  width: 22px;
+  height: 22px;
+  stroke: #F8FAFC;
+  stroke-width: 2.2px;
+  margin: auto;
+  pointer-events: none;
 }
 
 .mobile-menu {
@@ -802,6 +831,10 @@ img {
   align-items: center;
   justify-content: center;
   cursor: grab;
+  touch-action: pan-y;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
 }
 .hero-3d-container:active {
   cursor: grabbing;
@@ -842,12 +875,64 @@ img {
   }
 }
 
+/* Interactive touch hint badge */
+.hero-3d-hint {
+  position: absolute;
+  bottom: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 14px;
+  background: rgba(4, 9, 22, 0.82);
+  border: 1px solid rgba(0, 230, 118, 0.35);
+  border-radius: 999px;
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  color: var(--text-secondary);
+  font-family: var(--font-label);
+  font-size: 0.7rem;
+  font-weight: 500;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  z-index: 5;
+  pointer-events: none;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.55), 0 0 14px rgba(0, 230, 118, 0.15);
+  transition: opacity 0.5s ease, transform 0.5s ease;
+  animation: hero3dHintPulse 3s ease-in-out infinite alternate;
+}
+
+.hero-3d-hint--hidden {
+  opacity: 0;
+  transform: translateX(-50%) translateY(8px);
+  pointer-events: none;
+}
+
+.hero-3d-hint-icon {
+  color: var(--cyan);
+  font-size: 0.8rem;
+  animation: spin 6s linear infinite;
+}
+
+@keyframes hero3dHintPulse {
+  0% {
+    border-color: rgba(0, 230, 118, 0.25);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5), 0 0 8px rgba(0, 230, 118, 0.12);
+  }
+  100% {
+    border-color: rgba(0, 217, 255, 0.55);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5), 0 0 16px rgba(0, 217, 255, 0.35);
+  }
+}
+
 .hero-3d-container canvas {
   width: 100% !important;
   height: 100% !important;
   outline: none;
   position: relative;
   z-index: 1;
+  touch-action: pan-y;
 }
 
 /* Responsive queries: On mobile & tablet, 3D model comes FIRST, IGNITRON 2K26 follows below */
@@ -3129,14 +3214,23 @@ img {
 }
 
 @media (max-width: 768px) {
+  .nav-container {
+    padding: 0 18px;
+    gap: 12px;
+  }
   .nav-links-desktop {
     display: none;
   }
   .hamburger {
-    display: flex;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
   }
   .btn-brochure {
     display: none;
+  }
+  .nav-right {
+    gap: 10px;
   }
   .stats-grid {
     grid-template-columns: repeat(2, 1fr);
@@ -3157,6 +3251,40 @@ img {
 }
 
 @media (max-width: 480px) {
+  .nav-container {
+    padding: 0 12px;
+    gap: 8px;
+  }
+  .gmu-logo-img {
+    width: 38px;
+    height: 38px;
+  }
+  .logo-main {
+    font-size: 1.05rem;
+    letter-spacing: 1.5px;
+  }
+  .logo-sub {
+    font-size: 0.6rem;
+    letter-spacing: 1.5px;
+  }
+  .nav-right {
+    gap: 8px;
+  }
+  .btn-register {
+    padding: 7px 12px;
+    font-size: 0.78rem;
+    letter-spacing: 0.2px;
+  }
+  .hamburger {
+    width: 38px;
+    height: 38px;
+    min-width: 38px;
+    min-height: 38px;
+  }
+  .hamburger svg {
+    width: 20px;
+    height: 20px;
+  }
   .hero-title-ig {
     font-size: 3.2rem;
   }

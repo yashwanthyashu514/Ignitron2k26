@@ -64,8 +64,12 @@ export default function Navbar() {
           >
             Register Now
           </a>
-          <button className="hamburger" onClick={() => setMenuOpen(!menuOpen)}>
-            {menuOpen ? <X size={24} /> : <Menu size={24} />}
+          <button
+            className="hamburger"
+            onClick={() => setMenuOpen(!menuOpen)}
+            aria-label="Toggle navigation menu"
+          >
+            {menuOpen ? <X size={22} strokeWidth={2.2} /> : <Menu size={22} strokeWidth={2.2} />}
           </button>
         </div>
       </div>
