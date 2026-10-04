@@ -4,7 +4,7 @@ import { useApp } from '../context/AppContext';
 import EventCard from '../components/EventCard';
 import Countdown from '../components/Countdown';
 import Timeline from '../components/Timeline';
-import { ChevronDown, Zap, Images } from 'lucide-react';
+import { ChevronDown, Zap, Images, UserPlus } from 'lucide-react';
 
 const GALLERY_PREVIEW = [
   { src: '/2k24 (1).jpg', year: '2K24' },
@@ -61,9 +61,9 @@ export default function Home() {
               Explore Events
               <ChevronDown size={18} />
             </a>
-            <Link to="/gallery" className="btn-hero-secondary">
-              <Images size={16} />
-              Gallery
+            <Link to="/events" className="btn-hero-register">
+              <UserPlus size={18} />
+              Register Now
             </Link>
           </div>
         </div>
