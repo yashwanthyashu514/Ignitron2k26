@@ -3,17 +3,17 @@ import { useApp } from '../context/AppContext';
 import { Users, Star, Camera } from 'lucide-react';
 
 const CATEGORIES = [
-  { key: 'student_affairs', label: 'Student Affairs', emoji: '🎓', color: '#00E676' },
+  { key: 'organizer', label: 'Organizer', emoji: '👑', color: '#00E676' },
   { key: 'core', label: 'Core', emoji: '⚡', color: '#00D9FF' },
   { key: 'media', label: 'Media', emoji: '📸', color: '#F59E0B' },
 ];
 
 const DEFAULT_MEMBERS = {
-  student_affairs: [
-    { id: 'sa1', name: 'Arjun Sharma', role: 'Head – Student Affairs', photo: '' },
-    { id: 'sa2', name: 'Priya Mehta', role: 'Co-ordinator', photo: '' },
-    { id: 'sa3', name: 'Rahul Verma', role: 'Co-ordinator', photo: '' },
-    { id: 'sa4', name: 'Sneha Patel', role: 'Co-ordinator', photo: '' },
+  organizer: [
+    { id: 'org1', name: 'Dr. Ramesh Kumar', role: 'Faculty Coordinator', photo: '' },
+    { id: 'org2', name: 'Arjun Sharma', role: 'Chief Organizer', photo: '' },
+    { id: 'org3', name: 'Priya Mehta', role: 'Lead Convener', photo: '' },
+    { id: 'org4', name: 'Rahul Verma', role: 'Event Organizer', photo: '' },
   ],
   core: [
     { id: 'c1', name: 'Vikram Singh', role: 'Core Lead', photo: '' },
@@ -53,7 +53,7 @@ function MemberCard({ member, color }) {
 }
 
 export default function Team() {
-  const [activeCategory, setActiveCategory] = useState('student_affairs');
+  const [activeCategory, setActiveCategory] = useState('organizer');
   const { teamMembers } = useApp();
 
   const contextByCategory = {};

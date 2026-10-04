@@ -1,11 +1,20 @@
-import { Link } from 'react-router-dom';
-import { Clock, BookOpen, ExternalLink, Calendar } from 'lucide-react';
+import { Clock, BookOpen, ExternalLink, Calendar, MapPin } from 'lucide-react';
 
 const categoryColors = {
   Technical: '#00D9FF',
   Robotics: '#38bdf8',
+  'AI / Robotics': '#00E676',
   'AI/ML': '#00E676',
-  Design: '#f59e0b',
+  'Coding & Development': '#00D9FF',
+  'Cyber Security': '#38bdf8',
+  'Research & Technical': '#a78bfa',
+  'Management & Finance': '#f59e0b',
+  'Debate & Literary': '#ec4899',
+  'Law & Moot Court': '#f97316',
+  'Eco-Innovation': '#10b981',
+  Gaming: '#8b5cf6',
+  Innovation: '#06b6d4',
+  Electronics: '#eab308',
   default: '#00D9FF',
 };
 
@@ -14,7 +23,7 @@ export default function EventCard({ event, index }) {
   const dayColors = { 'Day 1': '#00D9FF', 'Day 2': '#00E676', 'Day 3': '#f59e0b' };
 
   return (
-    <div className="event-card" style={{ '--event-color': color, animationDelay: `${index * 0.1}s` }}>
+    <div className="event-card" style={{ '--event-color': color, animationDelay: `${index * 0.08}s` }}>
       <div className="event-card-glow" />
       <div className="event-card-header">
         <div className="event-category-badge" style={{ background: color + '22', color }}>
@@ -34,6 +43,12 @@ export default function EventCard({ event, index }) {
           <Clock size={14} />
           <span>{event.time}</span>
         </div>
+        {event.venue && (
+          <div className="event-meta-item">
+            <MapPin size={14} />
+            <span>{event.venue}</span>
+          </div>
+        )}
         {event.maxTeamSize && (
           <div className="event-meta-item">
             <span>👥</span>
@@ -52,13 +67,13 @@ export default function EventCard({ event, index }) {
         {event.rulebookLink && (
           <a href={event.rulebookLink} target="_blank" rel="noreferrer" className="btn-rulebook">
             <BookOpen size={14} />
-            Rulebook
+            Info
           </a>
         )}
         {event.registrationLink && (
           <a href={event.registrationLink} target="_blank" rel="noreferrer" className="btn-register-event">
             <ExternalLink size={14} />
-            Register on Unstop
+            Register
           </a>
         )}
       </div>

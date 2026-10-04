@@ -28,18 +28,18 @@ function saveToStorage(key, value) {
 }
 
 export function AppProvider({ children }) {
-  const [events, setEventsState] = useState(() => loadFromStorage('ignitron_events', defaultEvents));
+  const [events, setEventsState] = useState(() => loadFromStorage('ignitron_events_v3', defaultEvents));
   const [teamMembers, setTeamMembersState] = useState(() => loadFromStorage('ignitron_team', defaultTeamMembers));
-  const [timeline, setTimelineState] = useState(() => loadFromStorage('ignitron_timeline', defaultTimeline));
+  const [timeline, setTimelineState] = useState(() => loadFromStorage('ignitron_timeline_v3', defaultTimeline));
   const [scoreboard, setScoreboardState] = useState(() => loadFromStorage('ignitron_scoreboard', defaultScoreboard));
-  const [countdown, setCountdownState] = useState(() => loadFromStorage('ignitron_countdown', defaultCountdown));
+  const [countdown, setCountdownState] = useState(() => loadFromStorage('ignitron_countdown_v3', defaultCountdown));
   const [brochureLink, setBrochureLinkState] = useState(() => loadFromStorage('ignitron_brochure', defaultBrochureLink));
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(() => sessionStorage.getItem('ignitron_admin') === 'true');
 
   const setEvents = useCallback((val) => {
     const updated = typeof val === 'function' ? val(events) : val;
     setEventsState(updated);
-    saveToStorage('ignitron_events', updated);
+    saveToStorage('ignitron_events_v3', updated);
   }, [events]);
 
   const setTeamMembers = useCallback((val) => {
@@ -51,7 +51,7 @@ export function AppProvider({ children }) {
   const setTimeline = useCallback((val) => {
     const updated = typeof val === 'function' ? val(timeline) : val;
     setTimelineState(updated);
-    saveToStorage('ignitron_timeline', updated);
+    saveToStorage('ignitron_timeline_v3', updated);
   }, [timeline]);
 
   const setScoreboard = useCallback((val) => {
@@ -62,7 +62,7 @@ export function AppProvider({ children }) {
 
   const setCountdown = useCallback((val) => {
     setCountdownState(val);
-    saveToStorage('ignitron_countdown', val);
+    saveToStorage('ignitron_countdown_v3', val);
   }, []);
 
   const setBrochureLink = useCallback((val) => {
