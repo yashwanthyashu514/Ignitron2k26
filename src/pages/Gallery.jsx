@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { X, ChevronLeft, ChevronRight, Images } from 'lucide-react';
+import { X, ChevronLeft, ChevronRight, Images, ZoomIn } from 'lucide-react';
 
 const GALLERY_DATA = [
   {
@@ -87,7 +87,7 @@ export default function Gallery() {
         <section key={section.year} className="gallery-section">
           <div className="section-header">
             <div className="section-badge" style={{ color: section.color, borderColor: section.color + '44' }}>
-              📸 {section.label}
+              {section.label}
             </div>
             <h2 className="section-title" style={{ '--accent': section.color }}>
               {section.label}
@@ -109,7 +109,9 @@ export default function Gallery() {
               >
                 <img src={photo.src} alt={photo.caption} loading="lazy" />
                 <div className="gallery-item-overlay">
-                  <span className="gallery-zoom-icon">🔍</span>
+                  <span className="gallery-zoom-icon">
+                    <ZoomIn size={24} color="#00D9FF" />
+                  </span>
                 </div>
               </div>
             ))}

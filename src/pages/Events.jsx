@@ -28,7 +28,7 @@ export default function Events() {
           ))}
         </div>
         <div className="page-hero-content">
-          <div className="section-badge">🎯 Ignitron 2K26</div>
+          <div className="section-badge">Ignitron 2K26</div>
           <h1 className="page-hero-title">All Events</h1>
           <p className="page-hero-sub">Find your event and register on Unstop</p>
         </div>
@@ -54,7 +54,7 @@ export default function Events() {
               className={`events-day-tab ${activeDay === day ? 'active' : ''}`}
               onClick={() => setActiveDay(day)}
             >
-              {day === 'All' ? '🗓 All Days' : day}
+              {day === 'All' ? 'All Days' : day}
             </button>
           ))}
         </div>
@@ -68,7 +68,7 @@ export default function Events() {
           ))}
           {filtered.length === 0 && (
             <div className="no-events">
-              <span>🔍</span>
+              <Search size={28} />
               <p>No events match your search</p>
             </div>
           )}

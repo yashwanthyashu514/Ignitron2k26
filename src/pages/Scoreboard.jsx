@@ -1,5 +1,5 @@
 import { useApp } from '../context/AppContext';
-import { Trophy, Medal, Award } from 'lucide-react';
+import { Trophy, Medal, Award, Crown } from 'lucide-react';
 
 export default function Scoreboard() {
   const { scoreboard } = useApp();
@@ -33,7 +33,7 @@ export default function Scoreboard() {
           ))}
         </div>
         <div className="page-hero-content">
-          <div className="section-badge">🏆 Rankings</div>
+          <div className="section-badge">Rankings</div>
           <h1 className="page-hero-title">Scoreboard</h1>
           <p className="page-hero-sub">Live standings — Ignitron 2K26</p>
         </div>
@@ -53,7 +53,7 @@ export default function Scoreboard() {
               </div>
               {/* 1st Place */}
               <div className="podium-card podium-1">
-                <div className="podium-crown">👑</div>
+                <div className="podium-crown"><Crown size={28} color="#f59e0b" /></div>
                 <div className="podium-avatar gold">1</div>
                 <div className="podium-college">{sorted[0]?.collegeName}</div>
                 <div className="podium-score">{sorted[0]?.score} pts</div>

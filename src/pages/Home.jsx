@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import EventCard from '../components/EventCard';
 import Countdown from '../components/Countdown';
-import Timeline from '../components/Timeline';
 import Hero3D from '../components/Hero3D';
 import Gallery from '../components/Gallery';
 import { ChevronDown, Zap, Images, UserPlus } from 'lucide-react';
@@ -34,7 +33,7 @@ export default function Home() {
           <div className="hero-content hero-content--left">
             <div className="hero-badge">
               <Zap size={14} />
-              GMU's Premier Tech Fest
+              NATIONAL LEVEL TECH FEST
             </div>
             <h1 className="hero-title">
               <img
@@ -80,7 +79,7 @@ export default function Home() {
       {/* Events List */}
       <section className="events-section" id="events-section">
         <div className="section-header">
-          <div className="section-badge">🎯 Competitions</div>
+          <div className="section-badge">Competitions</div>
           <h2 className="section-title">Events</h2>
           <p className="section-sub">Choose your battlefield</p>
         </div>
@@ -106,9 +105,6 @@ export default function Home() {
           )}
         </div>
       </section>
-
-      {/* Timeline */}
-      <Timeline />
 
       {/* 3D Motion Gallery */}
       <Gallery />

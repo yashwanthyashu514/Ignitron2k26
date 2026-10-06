@@ -6,6 +6,7 @@ import Events from './pages/Events';
 import Scoreboard from './pages/Scoreboard';
 import Team from './pages/Team';
 import Gallery from './pages/Gallery';
+import Timeline from './pages/Timeline';
 import AdminLogin from './pages/AdminLogin';
 import AdminDashboard from './pages/AdminDashboard';
 import './App.css';
@@ -26,6 +27,7 @@ export default function App() {
         <Routes>
           <Route path="/" element={<PublicLayout><Home /></PublicLayout>} />
           <Route path="/events" element={<PublicLayout><Events /></PublicLayout>} />
+          <Route path="/timeline" element={<PublicLayout><Timeline /></PublicLayout>} />
           <Route path="/scoreboard" element={<PublicLayout><Scoreboard /></PublicLayout>} />
           <Route path="/team" element={<PublicLayout><Team /></PublicLayout>} />
           <Route path="/gallery" element={<PublicLayout><Gallery /></PublicLayout>} />

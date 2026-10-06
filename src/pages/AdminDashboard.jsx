@@ -4,7 +4,7 @@ import { useApp } from '../context/AppContext';
 import {
   LogOut, Plus, Trash2, Edit3, Save, X, Upload,
   Calendar, Users, Trophy, Clock, Link, FileText,
-  Settings, ChevronDown, ChevronUp, CheckCircle, Menu, ChevronRight, Globe
+  Settings, ChevronDown, ChevronUp, CheckCircle, Menu, ChevronRight, Globe, Folder
 } from 'lucide-react';
 
 // ========================
@@ -44,11 +44,11 @@ function EventsManager({ toast }) {
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState({
     name: '', time: '', day: 'Day 1', rulebookLink: '', registrationLink: '',
-    description: '', category: 'Technical', maxTeamSize: '', prize: '',
+    description: '', category: 'Technical', maxTeamSize: '',
   });
 
   const resetForm = () => {
-    setForm({ name: '', time: '', day: 'Day 1', rulebookLink: '', registrationLink: '', description: '', category: 'Technical', maxTeamSize: '', prize: '' });
+    setForm({ name: '', time: '', day: 'Day 1', rulebookLink: '', registrationLink: '', description: '', category: 'Technical', maxTeamSize: '' });
     setEditing(null);
   };
 
@@ -81,7 +81,7 @@ function EventsManager({ toast }) {
     <div>
       {/* Event Form */}
       <div id="event-form" className="admin-form-card">
-        <h4 className="admin-form-title">{editing ? '✏️ Edit Event' : '➕ Add Event'}</h4>
+        <h4 className="admin-form-title">{editing ? 'Edit Event' : 'Add Event'}</h4>
         <div className="admin-form-grid">
           <div className="form-group">
             <label className="form-label">Event Name *</label>
@@ -122,10 +122,6 @@ function EventsManager({ toast }) {
             <label className="form-label">Max Team Size</label>
             <input className="form-input" type="number" value={form.maxTeamSize} onChange={e => setForm({ ...form, maxTeamSize: e.target.value })} placeholder="e.g. 4" />
           </div>
-          <div className="form-group">
-            <label className="form-label">Prize</label>
-            <input className="form-input" value={form.prize} onChange={e => setForm({ ...form, prize: e.target.value })} placeholder="e.g. ₹25,000" />
-          </div>
           <div className="form-group form-group-full">
             <label className="form-label">Description</label>
             <textarea className="form-input form-textarea" value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} placeholder="Event description..." rows={3} />
@@ -152,8 +148,7 @@ function EventsManager({ toast }) {
               <div className="admin-list-meta">
                 <span><Clock size={12} /> {ev.time}</span>
                 <span><Calendar size={12} /> {ev.day}</span>
-                <span>📂 {ev.category}</span>
-                {ev.prize && <span>🏆 {ev.prize}</span>}
+                <span><Folder size={12} /> {ev.category}</span>
               </div>
             </div>
             <div className="admin-list-actions">
@@ -201,7 +196,7 @@ function TeamManager({ toast }) {
   return (
     <div>
       <div className="admin-form-card">
-        <h4 className="admin-form-title">➕ Add Team Member</h4>
+        <h4 className="admin-form-title">Add Team Member</h4>
         <div className="admin-form-grid">
           <div className="form-group">
             <label className="form-label">Name *</label>
@@ -264,7 +259,7 @@ function CountdownManager({ toast }) {
 
   return (
     <div className="admin-form-card">
-      <h4 className="admin-form-title">⏱ Update Countdown Target</h4>
+      <h4 className="admin-form-title">Update Countdown Target</h4>
       <div className="form-group">
         <label className="form-label">Event Date & Time</label>
         <input
@@ -311,7 +306,7 @@ function TimelineManager({ toast }) {
 
   return (
     <div className="admin-form-card">
-      <h4 className="admin-form-title">📅 Update Timeline</h4>
+      <h4 className="admin-form-title">Update Timeline</h4>
       <div className="day-tab-group">
         {['day1', 'day2', 'day3'].map(d => (
           <button key={d} className={`day-tab-btn ${activeDay === d ? 'active' : ''}`} onClick={() => switchDay(d)}>
@@ -361,7 +356,7 @@ function BrochureManager({ toast }) {
 
   return (
     <div className="admin-form-card">
-      <h4 className="admin-form-title">📄 Update Brochure Link</h4>
+      <h4 className="admin-form-title">Update Brochure Link</h4>
       <div className="form-group">
         <label className="form-label">Google Drive Link</label>
         <input className="form-input" value={val} onChange={e => setVal(e.target.value)} placeholder="https://drive.google.com/file/..." />
@@ -413,7 +408,7 @@ function ScoreboardManager({ toast }) {
     <div>
       {/* Add New */}
       <div className="admin-form-card">
-        <h4 className="admin-form-title">➕ Add College / Team</h4>
+        <h4 className="admin-form-title">Add College / Team</h4>
         <div className="admin-form-grid">
           <div className="form-group">
             <label className="form-label">College / Team Name *</label>
@@ -440,7 +435,7 @@ function ScoreboardManager({ toast }) {
         {sorted.map((entry, i) => (
           <div className="admin-score-row" key={entry.id}>
             <div className="admin-rank">
-              {i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `#${String(i + 1).padStart(2, '0')}`}
+              #{String(i + 1).padStart(2, '0')}
             </div>
             {editingId === entry.id ? (
               <>
@@ -576,7 +571,7 @@ export default function AdminDashboard() {
             </div>
           </div>
           <div className="admin-topbar-right">
-            <span className="admin-badge-live">🟢 Live</span>
+            <span className="admin-badge-live">Live</span>
             <button className="btn-logout-top" onClick={handleLogout}>
               <LogOut size={15} /> Logout
             </button>
@@ -586,7 +581,7 @@ export default function AdminDashboard() {
         <div className="admin-sections">
           {activeTab === 'events' && (
             <div id="events" className="admin-tab-pane">
-              <Section title="Event Management" icon="🎯" defaultOpen>
+              <Section title="Event Management" icon={<Calendar size={18} />} defaultOpen>
                 <EventsManager toast={showToast} />
               </Section>
             </div>
@@ -594,7 +589,7 @@ export default function AdminDashboard() {
 
           {activeTab === 'team' && (
             <div id="team" className="admin-tab-pane">
-              <Section title="Crew Team" icon="👥" defaultOpen>
+              <Section title="Crew Team" icon={<Users size={18} />} defaultOpen>
                 <TeamManager toast={showToast} />
               </Section>
             </div>
@@ -602,7 +597,7 @@ export default function AdminDashboard() {
 
           {activeTab === 'countdown' && (
             <div id="countdown" className="admin-tab-pane">
-              <Section title="Countdown" icon="⏱" defaultOpen>
+              <Section title="Countdown" icon={<Clock size={18} />} defaultOpen>
                 <CountdownManager toast={showToast} />
               </Section>
             </div>
@@ -610,7 +605,7 @@ export default function AdminDashboard() {
 
           {activeTab === 'timeline' && (
             <div id="timeline" className="admin-tab-pane">
-              <Section title="Timeline" icon="📅" defaultOpen>
+              <Section title="Timeline" icon={<Calendar size={18} />} defaultOpen>
                 <TimelineManager toast={showToast} />
               </Section>
             </div>
@@ -618,7 +613,7 @@ export default function AdminDashboard() {
 
           {activeTab === 'brochure' && (
             <div id="brochure" className="admin-tab-pane">
-              <Section title="Brochure" icon="📄" defaultOpen>
+              <Section title="Brochure" icon={<FileText size={18} />} defaultOpen>
                 <BrochureManager toast={showToast} />
               </Section>
             </div>
@@ -626,7 +621,7 @@ export default function AdminDashboard() {
 
           {activeTab === 'scoreboard' && (
             <div id="scoreboard" className="admin-tab-pane">
-              <Section title="Scoreboard" icon="🏆" defaultOpen>
+              <Section title="Scoreboard" icon={<Trophy size={18} />} defaultOpen>
                 <ScoreboardManager toast={showToast} />
               </Section>
             </div>

@@ -39,7 +39,7 @@ export default function Countdown() {
   return (
     <div className="countdown-section">
       <div className="section-header">
-        <div className="section-badge">⏳ Time to Event</div>
+        <div className="section-badge">Time to Event</div>
         <h2 className="section-title">Event Countdown</h2>
         <p className="section-sub">Mark your calendars — Ignitron 2K26 is almost here!</p>
       </div>
@@ -55,7 +55,7 @@ export default function Countdown() {
       </div>
 
       <div className="countdown-date-display">
-        📅 Event Date: <span>{new Date(countdown).toLocaleDateString('en-IN', {
+        Event Date: <span>{new Date(countdown).toLocaleDateString('en-IN', {
           weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
         })}</span>
       </div>

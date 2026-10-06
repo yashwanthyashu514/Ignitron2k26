@@ -19,7 +19,6 @@ export const defaultEvents = [
     rulebookLink: 'https://drive.google.com/file/d/1iffQlxuHbxKJfOQH-lMuaXCW3NqU56D7/view?usp=drive_link',
     registrationLink: 'https://unstop.com/p/marketing-mavericks-ignitron-2k25-gm-university-davanagere-1595311',
     maxTeamSize: 3,
-    prize: '₹15,000',
   },
   {
     id: '2',
@@ -33,7 +32,6 @@ export const defaultEvents = [
     rulebookLink: 'https://drive.google.com/file/d/1b1Jzq9y97DhhX6uvUroyZpTBVLULADoz/view?usp=drive_link',
     registrationLink: 'https://unstop.com/o/YI6if09?utm_medium=Share&utm_source=gmutec59724&utm_campaign=Competitions',
     maxTeamSize: 3,
-    prize: '₹12,000',
   },
   {
     id: '3',
@@ -47,7 +45,6 @@ export const defaultEvents = [
     rulebookLink: 'https://drive.google.com/file/d/1IqLhUbwtgU33B7HRPhISOw1Cl_ojv6s8/view?usp=drive_link',
     registrationLink: 'https://unstop.com/hackathons/model-quest-ignitron-2k25-gm-university-davanagere-1584219?utm_medium=Share&utm_source=gmutec59724&utm_campaign=Online_coding_challenge',
     maxTeamSize: 3,
-    prize: '₹15,000',
   },
   {
     id: '4',
@@ -61,7 +58,6 @@ export const defaultEvents = [
     rulebookLink: 'https://drive.google.com/file/d/16A9h5USa07bk3HlbULfEhAttr_S6MiP-/view?usp=sharing',
     registrationLink: 'https://unstop.com/hackathons/code-rush-24hrs-hackathon-ignitron-2k25-gm-university-davanagere-1580214?utm_medium=Share&utm_source=gmutec59724&utm_campaign=Online_coding_challenge',
     maxTeamSize: 4,
-    prize: '₹25,000',
   },
   {
     id: '5',
@@ -75,7 +71,6 @@ export const defaultEvents = [
     rulebookLink: 'https://drive.google.com/file/d/1FDs8XLCKqKcwASMTHkOW6nwgyoRP77Rq/view?usp=drive_link',
     registrationLink: 'https://unstop.com/o/EZpMasm?utm_medium=Share&utm_source=gmutec59724&utm_campaign=Competitions',
     maxTeamSize: 3,
-    prize: '₹18,000',
   },
   {
     id: '6',
@@ -89,7 +84,6 @@ export const defaultEvents = [
     rulebookLink: 'https://drive.google.com/file/d/1hnqTPOYiAse85s1LS5GSRd_jOF4YL7kI/view?usp=drive_link',
     registrationLink: 'https://unstop.com/o/vtJzUoG?utm_medium=Share&utm_source=gmutec59724&utm_campaign=Competitions',
     maxTeamSize: 3,
-    prize: '₹15,000',
   },
   {
     id: '7',
@@ -102,7 +96,6 @@ export const defaultEvents = [
     rulebookLink: 'https://drive.google.com/file/d/1eADUy7XIhh0hPlvqn33OcNrTK6nQjNt7/view?usp=drive_link',
     registrationLink: 'https://unstop.com/p/nextwave-paper-presentation-ignitron-2k25-gm-university-davanagere-1595254',
     maxTeamSize: 3,
-    prize: '₹12,000',
   },
   {
     id: '8',
@@ -115,7 +108,6 @@ export const defaultEvents = [
     rulebookLink: 'https://drive.google.com/file/d/1qzV3RHV2tol-Ohn98MpL9Y35gn2Nd-7s/view?usp=drive_link',
     registrationLink: 'https://unstop.com/p/ignitex-debate-ignitron-2k25-gm-university-davanagere-1595301',
     maxTeamSize: 2,
-    prize: '₹10,000',
   },
   {
     id: '9',
@@ -128,7 +120,6 @@ export const defaultEvents = [
     rulebookLink: 'https://drive.google.com/file/d/1OSMQQqvtJ8mFMPO3t795O-A1XIWuZ32Y/view?usp=sharing',
     registrationLink: 'https://unstop.com/p/ignitron-2k25-ignitron-2k25-gm-university-davanagere-1595027',
     maxTeamSize: 3,
-    prize: '₹20,000',
   },
 
   // --- DAY 2 ---
@@ -144,7 +135,6 @@ export const defaultEvents = [
     rulebookLink: 'https://drive.google.com/file/d/15uOLEOQ-3ZWkDl_gWY3DNOBACWSRGIeD/view?usp=drive_link',
     registrationLink: 'https://unstop.com/o/cvqAS24?utm_medium=Share&utm_source=gmutec59724&utm_campaign=Competitions',
     maxTeamSize: 2,
-    prize: '₹12,000',
   },
   {
     id: '11',
@@ -158,7 +148,6 @@ export const defaultEvents = [
     rulebookLink: 'https://drive.google.com/file/d/11J_5GTNda10RpPMaKLWmvzQvmEjt0-zr/view?usp=drive_link',
     registrationLink: 'https://unstop.com/o/wvOI8sh?utm_medium=Share&utm_source=gmutec59724&utm_campaign=Competitions',
     maxTeamSize: 4,
-    prize: '₹20,000',
   },
   {
     id: '12',
@@ -171,7 +160,6 @@ export const defaultEvents = [
     rulebookLink: 'https://drive.google.com/file/d/1xcO9rfb66s4RKLzP9nPVpJ85_gDKQ0U8/view?usp=drive_link',
     registrationLink: 'https://unstop.com/p/start-a-thon-ignitron-2k25-gm-university-davanagere-1595075',
     maxTeamSize: 4,
-    prize: '₹18,000',
   },
   {
     id: '13',
@@ -184,7 +172,6 @@ export const defaultEvents = [
     rulebookLink: 'https://drive.google.com/file/d/1KgBAI7M0YlO60NsHhh--k0_YsDqZspjQ/view?usp=drive_link',
     registrationLink: 'https://unstop.com/p/finovate-ignitron-2k25-gm-university-davanagere-1595339',
     maxTeamSize: 3,
-    prize: '₹15,000',
   },
   {
     id: '14',
@@ -197,7 +184,6 @@ export const defaultEvents = [
     rulebookLink: 'https://drive.google.com/file/d/1OSMQQqvtJ8mFMPO3t795O-A1XIWuZ32Y/view?usp=sharing',
     registrationLink: 'https://unstop.com/p/ignitron-2k25-ignitron-2k25-gm-university-davanagere-1595027',
     maxTeamSize: 3,
-    prize: '₹20,000',
   },
   {
     id: '15',
@@ -211,7 +197,6 @@ export const defaultEvents = [
     rulebookLink: 'https://drive.google.com/file/d/1-TPuFscpvY9pa6cmmnWiLrLNAjQntTIm/view?usp=drive_link',
     registrationLink: 'https://unstop.com/competitions/robo-sumo-ignitron-2k25-gm-university-davanagere-1584561?utm_medium=Share&utm_source=gmutec59724&utm_campaign=Competitions',
     maxTeamSize: 3,
-    prize: '₹18,000',
   },
   {
     id: '16',
@@ -225,7 +210,6 @@ export const defaultEvents = [
     rulebookLink: 'https://drive.google.com/file/d/1E5mEbTVKFDBVaDfnpP8Lsc2o98faOr4o/view?usp=drive_link',
     registrationLink: 'https://unstop.com/o/V8l0HrJ?utm_medium=Share&utm_source=gmutec59724&utm_campaign=Competitions',
     maxTeamSize: 2,
-    prize: '₹10,000',
   },
   {
     id: '17',
@@ -239,7 +223,6 @@ export const defaultEvents = [
     rulebookLink: 'https://drive.google.com/file/d/1mzTHAorZe7JjkuOJuYQ5WFZbJoLz2_ra/view?usp=drive_link',
     registrationLink: 'https://unstop.com/o/H58PLDg?utm_medium=Share&utm_source=gmutec59724&utm_campaign=Competitions',
     maxTeamSize: 2,
-    prize: '₹10,000',
   },
   {
     id: '18',
@@ -252,7 +235,6 @@ export const defaultEvents = [
     rulebookLink: 'https://drive.google.com/file/d/1Q8m_aR5LSMMiYF5AqNwQz2z6N2pwqtNv/view?usp=drive_link',
     registrationLink: 'https://unstop.com/p/food-tech-ignitron-2k25-gm-university-davanagere-1595405',
     maxTeamSize: 3,
-    prize: '₹10,000',
   },
   {
     id: '19',
@@ -266,7 +248,6 @@ export const defaultEvents = [
     rulebookLink: '',
     registrationLink: 'https://forms.gle/EARkeMYR3TQL4qvF8',
     maxTeamSize: 4,
-    prize: '₹15,000',
   },
   {
     id: '20',
@@ -280,7 +261,6 @@ export const defaultEvents = [
     rulebookLink: '',
     registrationLink: 'https://forms.gle/EARkeMYR3TQL4qvF8',
     maxTeamSize: 4,
-    prize: '₹15,000',
   },
 
   // --- DAY 3 ---
@@ -296,7 +276,6 @@ export const defaultEvents = [
     rulebookLink: 'https://drive.google.com/file/d/165VhIPLNe1Su9usnHE_gHKCYYM3L4729/view?usp=drive_link',
     registrationLink: 'https://unstop.com/o/itRdFEM?utm_medium=Share&utm_source=gmutec59724&utm_campaign=Competitions',
     maxTeamSize: 2,
-    prize: '₹10,000',
   },
   {
     id: '22',
@@ -310,7 +289,6 @@ export const defaultEvents = [
     rulebookLink: 'https://drive.google.com/file/d/1HZeNreULcVCfDcIcQ82AM2BKuCURtoMi/view?usp=drive_link',
     registrationLink: 'https://unstop.com/o/VUHiG3I?utm_medium=Share&utm_source=gmutec59724&utm_campaign=Competitions',
     maxTeamSize: 3,
-    prize: '₹10,000',
   },
   {
     id: '23',
@@ -324,7 +302,6 @@ export const defaultEvents = [
     rulebookLink: 'https://drive.google.com/file/d/1vxYmRgxvaWMLrIIWazouJW16E4QuOBij/view?usp=sharing',
     registrationLink: 'https://unstop.com/o/UMB36kF?utm_medium=Share&utm_source=gmutec59724&utm_campaign=Competitions',
     maxTeamSize: 3,
-    prize: '₹15,000',
   },
   {
     id: '24',
@@ -338,7 +315,6 @@ export const defaultEvents = [
     rulebookLink: 'https://drive.google.com/file/d/17hYRdvt5DRMNBwkJ2uNFyQ4HK9QJMGu5/view?usp=drive_link',
     registrationLink: 'https://unstop.com/o/A4mtwJ3?utm_medium=Share&utm_source=gmutec59724&utm_campaign=Online_coding_challenge',
     maxTeamSize: 2,
-    prize: '₹12,000',
   },
   {
     id: '25',
@@ -351,17 +327,50 @@ export const defaultEvents = [
     rulebookLink: 'https://drive.google.com/file/d/1OSMQQqvtJ8mFMPO3t795O-A1XIWuZ32Y/view?usp=sharing',
     registrationLink: 'https://unstop.com/p/ignitron-2k25-ignitron-2k25-gm-university-davanagere-1595027',
     maxTeamSize: 3,
-    prize: '₹20,000',
   },
 ];
 
 export const defaultTeamMembers = [
-  { id: '1', name: 'Arjun Sharma', role: 'Event Coordinator', photo: '' },
-  { id: '2', name: 'Priya Mehta', role: 'Technical Head', photo: '' },
-  { id: '3', name: 'Rahul Verma', role: 'Logistics Manager', photo: '' },
-  { id: '4', name: 'Sneha Reddy', role: 'Design Lead', photo: '' },
-  { id: '5', name: 'Karan Patel', role: 'Marketing Head', photo: '' },
-  { id: '6', name: 'Divya Nair', role: 'PR Manager', photo: '' },
+  {
+    id: 'org1',
+    name: 'Dr. S. R. Shankapal',
+    role: 'Vice Chancellor',
+    org: 'GM University',
+    category: 'organizer',
+    photo: '/team/dr_s_r_shankapal.png',
+  },
+  {
+    id: 'org2',
+    name: 'Prof. Dr. M. Venu Gopala Rao',
+    role: 'Pro Vice Chancellor',
+    org: 'GM University',
+    category: 'organizer',
+    photo: '/team/dr_m_venu_gopala_rao.png',
+  },
+  {
+    id: 'org3',
+    name: 'Dr. Sunil Kumar B. S',
+    role: 'Registrar',
+    org: 'GM University',
+    category: 'organizer',
+    photo: '/team/dr_sunil_kumar_b_s.png',
+  },
+  {
+    id: 'org4',
+    name: 'Dr. Kiran Kumar H S',
+    role: 'Director, Students Affairs',
+    org: 'GM University',
+    category: 'organizer',
+    photo: '/team/dr_kiran_kumar_h_s.png',
+  },
+  {
+    id: 'org5',
+    name: 'Mr. Imran Khan',
+    role: 'Assistant Director',
+    org: 'Technical Clubs, GM University',
+    category: 'organizer',
+    photo: '/team/mr_imran_khan.png',
+  },
 ];
 
 export const defaultTimeline = {

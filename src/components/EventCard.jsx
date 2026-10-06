@@ -1,4 +1,4 @@
-import { Clock, BookOpen, ExternalLink, Calendar, MapPin } from 'lucide-react';
+import { Clock, BookOpen, ExternalLink, Calendar, MapPin, Users } from 'lucide-react';
 
 const categoryColors = {
   Technical: '#00D9FF',
@@ -51,14 +51,8 @@ export default function EventCard({ event, index }) {
         )}
         {event.maxTeamSize && (
           <div className="event-meta-item">
-            <span>👥</span>
+            <Users size={14} />
             <span>Team: {event.maxTeamSize}</span>
-          </div>
-        )}
-        {event.prize && (
-          <div className="event-meta-item prize">
-            <span>🏆</span>
-            <span>{event.prize}</span>
           </div>
         )}
       </div>
