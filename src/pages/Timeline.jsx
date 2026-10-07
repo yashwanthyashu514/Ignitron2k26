@@ -146,7 +146,7 @@ export default function Timeline() {
             <div className="timeline-stat-chip">
               <Zap size={14} className="stat-chip-icon stat-icon-emerald" />
               <span>
-                <strong>{totalEventsCount}+</strong> Scheduled Sessions
+                <strong>Official</strong> Schedule
               </span>
             </div>
             <div className="timeline-stat-chip">
@@ -170,11 +170,9 @@ export default function Timeline() {
             >
               <Layers size={14} />
               <span>All 3 Days</span>
-              <span className="timeline-tab-count">{totalEventsCount}</span>
             </button>
 
             {dayMetadata.map(d => {
-              const count = (timeline[d.key] || []).length;
               return (
                 <button
                   key={d.key}
@@ -190,7 +188,6 @@ export default function Timeline() {
                   />
                   <span>{d.label}</span>
                   <span className="timeline-tab-date">({d.shortDate})</span>
-                  <span className="timeline-tab-count">{count}</span>
                 </button>
               );
             })}
@@ -277,9 +274,6 @@ export default function Timeline() {
                       <span className="milestone-date">{group.date}</span>
                     </div>
                     <p className="milestone-sub">{group.tagline}</p>
-                    <div className="milestone-counter">
-                      {group.events.length} Event{group.events.length !== 1 ? 's' : ''}
-                    </div>
                   </div>
 
                   {/* Vertical Animated Spine & Nodes */}
@@ -418,7 +412,6 @@ export default function Timeline() {
                     {group.label}
                   </div>
                   <h3 className="col-header-title">{group.date}</h3>
-                  <p className="col-header-count">{group.events.length} Events Scheduled</p>
                 </div>
 
                 <div className="timeline-col-events-list">

@@ -29,11 +29,11 @@ function saveToStorage(key, value) {
 
 export function AppProvider({ children }) {
   const [events, setEventsState] = useState(() => {
-    const raw = loadFromStorage('ignitron_events_v4', defaultEvents);
+    const raw = loadFromStorage('ignitron_events_v5', defaultEvents);
     return Array.isArray(raw) ? raw.map(({ prize, fee, price, ...rest }) => rest) : defaultEvents;
   });
   const [teamMembers, setTeamMembersState] = useState(() => loadFromStorage('ignitron_team_v4', defaultTeamMembers));
-  const [timeline, setTimelineState] = useState(() => loadFromStorage('ignitron_timeline_v3', defaultTimeline));
+  const [timeline, setTimelineState] = useState(() => loadFromStorage('ignitron_timeline_v4', defaultTimeline));
   const [scoreboard, setScoreboardState] = useState(() => loadFromStorage('ignitron_scoreboard', defaultScoreboard));
   const [countdown, setCountdownState] = useState(() => loadFromStorage('ignitron_countdown_v3', defaultCountdown));
   const [brochureLink, setBrochureLinkState] = useState(() => loadFromStorage('ignitron_brochure', defaultBrochureLink));
@@ -42,7 +42,7 @@ export function AppProvider({ children }) {
   const setEvents = useCallback((val) => {
     const updated = typeof val === 'function' ? val(events) : val;
     setEventsState(updated);
-    saveToStorage('ignitron_events_v4', updated);
+    saveToStorage('ignitron_events_v5', updated);
   }, [events]);
 
   const setTeamMembers = useCallback((val) => {
@@ -54,7 +54,7 @@ export function AppProvider({ children }) {
   const setTimeline = useCallback((val) => {
     const updated = typeof val === 'function' ? val(timeline) : val;
     setTimelineState(updated);
-    saveToStorage('ignitron_timeline_v3', updated);
+    saveToStorage('ignitron_timeline_v4', updated);
   }, [timeline]);
 
   const setScoreboard = useCallback((val) => {

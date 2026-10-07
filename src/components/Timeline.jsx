@@ -56,9 +56,6 @@ export default function Timeline() {
                   <h3 className="timeline-day-title">{label}</h3>
                   <span className="timeline-day-date">{date}</span>
                 </div>
-                <span className="timeline-day-count">
-                  {eventsList.length} Events
-                </span>
               </div>
 
               <div className="timeline-events">
