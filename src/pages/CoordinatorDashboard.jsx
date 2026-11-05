@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
-import Loader from '../components/Loader';
 import {
   Users,
   Trophy,
@@ -42,7 +41,6 @@ export default function CoordinatorDashboard() {
   const navigate = useNavigate();
 
   const [activeTab, setActiveTab] = useState('teams'); // 'teams', 'scoring', 'history'
-  const [tabTransitioning, setTabTransitioning] = useState(false);
   const [teams, setTeams] = useState([]);
   const [eventData, setEventData] = useState(null);
   const [submission, setSubmission] = useState(null);
@@ -50,15 +48,6 @@ export default function CoordinatorDashboard() {
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
   const [toastMessage, setToastMessage] = useState('');
-
-  const handleTabSwitch = (tab) => {
-    if (tab === activeTab) return;
-    setTabTransitioning(true);
-    setActiveTab(tab);
-    setTimeout(() => {
-      setTabTransitioning(false);
-    }, 320);
-  };
 
   // Modals state for Team Registration
   const [showTeamModal, setShowTeamModal] = useState(false);
@@ -438,10 +427,6 @@ export default function CoordinatorDashboard() {
   const isAllScored = teams.length > 0 && scoredTeamsCount === teams.length;
   const progressPercent = teams.length > 0 ? Math.round((scoredTeamsCount / teams.length) * 100) : 0;
 
-  if (loading && !eventData) {
-    return <Loader text="Loading Coordinator Workspace..." fullScreen />;
-  }
-
   return (
     <div className="coord-dashboard-root">
 
@@ -788,7 +773,7 @@ export default function CoordinatorDashboard() {
             <button
               type="button"
               className="coord-nav-tab-btn"
-              onClick={() => handleTabSwitch('teams')}
+              onClick={() => setActiveTab('teams')}
               style={{
                 background: activeTab === 'teams' ? 'linear-gradient(135deg, rgba(245, 158, 11, 0.25), rgba(217, 119, 6, 0.35))' : 'transparent',
                 border: activeTab === 'teams' ? '1px solid #f59e0b' : '1px solid transparent',
@@ -821,7 +806,7 @@ export default function CoordinatorDashboard() {
             <button
               type="button"
               className="coord-nav-tab-btn"
-              onClick={() => handleTabSwitch('scoring')}
+              onClick={() => setActiveTab('scoring')}
               style={{
                 background: activeTab === 'scoring' ? 'linear-gradient(135deg, rgba(56, 189, 248, 0.25), rgba(14, 165, 233, 0.35))' : 'transparent',
                 border: activeTab === 'scoring' ? '1px solid #38bdf8' : '1px solid transparent',
@@ -855,7 +840,7 @@ export default function CoordinatorDashboard() {
             <button
               type="button"
               className="coord-nav-tab-btn"
-              onClick={() => handleTabSwitch('history')}
+              onClick={() => setActiveTab('history')}
               style={{
                 background: activeTab === 'history' ? 'rgba(255, 255, 255, 0.12)' : 'transparent',
                 border: activeTab === 'history' ? '1px solid rgba(255, 255, 255, 0.25)' : '1px solid transparent',
@@ -930,12 +915,6 @@ export default function CoordinatorDashboard() {
         {/* ======================================================== */}
         {/* TAB 1: REGISTERED TEAMS (Modern Interactive Cards) */}
         {/* ======================================================== */}
-        {tabTransitioning ? (
-          <div style={{ minHeight: '380px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <Loader text={`Loading ${activeTab === 'teams' ? 'Registered Teams' : activeTab === 'scoring' ? 'Score Evaluation' : 'Activity History'}...`} />
-          </div>
-        ) : (
-          <>
         {activeTab === 'teams' && (
           <div>
             {/* Search Bar & Counter */}
@@ -1794,8 +1773,6 @@ export default function CoordinatorDashboard() {
               </div>
             )}
           </div>
-        )}
-        </>
         )}
 
       </div>

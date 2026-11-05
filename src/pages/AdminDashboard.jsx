@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
-import Loader from '../components/Loader';
 import {
   LogOut, Plus, Trash2, Edit3, Save, X, Upload,
   Calendar, Users, Trophy, Clock, Link, FileText,
@@ -270,9 +269,7 @@ function ResultApprovalManager({ toast, onRefreshStats }) {
         </button>
       </div>
 
-      {loading ? (
-        <Loader text="Loading score submissions from database..." />
-      ) : submissions.length === 0 ? (
+      {submissions.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '48px 20px', background: 'rgba(30, 41, 59, 0.4)', borderRadius: '12px', border: '1px dashed rgba(255, 255, 255, 0.1)' }}>
           <Clock size={40} color="#64748b" style={{ margin: '0 auto 12px auto' }} />
           <h3 style={{ color: '#cbd5e1' }}>No Score Submissions Yet</h3>
@@ -676,10 +673,7 @@ function CoordinatorManager({ toast, onRefreshStats }) {
       </div>
 
       {/* Coordinators Table */}
-      {loading ? (
-        <Loader text="Loading event coordinators & assignments..." />
-      ) : (
-        <div className="admin-table-container">
+      <div className="admin-table-container">
         <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.85rem' }}>
           <thead>
             <tr style={{ background: '#0f172a', color: '#94a3b8', borderBottom: '1px solid rgba(255, 255, 255, 0.1)' }}>
@@ -764,7 +758,6 @@ function CoordinatorManager({ toast, onRefreshStats }) {
           </tbody>
         </table>
       </div>
-      )}
 
       {/* CREATE / EDIT MODAL */}
       {showModal && (
@@ -1005,9 +998,6 @@ function AllTeamsViewer({ toast }) {
         </div>
       </div>
 
-      {loading ? (
-        <Loader text="Loading registered teams from database..." />
-      ) : (
       <div className="admin-teams-grid">
         {filteredTeams.length === 0 ? (
           <div style={{ gridColumn: '1 / -1', padding: '40px', textAlign: 'center', color: '#94a3b8', background: 'rgba(30, 41, 59, 0.4)', borderRadius: '12px' }}>
@@ -1069,7 +1059,6 @@ function AllTeamsViewer({ toast }) {
           ))
         )}
       </div>
-      )}
     </div>
   );
 }
@@ -1168,9 +1157,6 @@ function AuditLogsViewer({ toast }) {
       </div>
 
       {/* Table */}
-      {loading ? (
-        <Loader text="Loading activity & audit logs from database..." />
-      ) : (
       <div style={{ background: 'rgba(30, 41, 59, 0.7)', borderRadius: '12px', border: '1px solid rgba(255, 255, 255, 0.08)', overflowX: 'auto', marginBottom: '16px' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.85rem' }}>
           <thead>
@@ -1223,7 +1209,6 @@ function AuditLogsViewer({ toast }) {
           </tbody>
         </table>
       </div>
-      )}
 
       {/* Pagination */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: '#94a3b8', fontSize: '0.85rem' }}>
@@ -1602,20 +1587,9 @@ export default function AdminDashboard() {
   const navigate = useNavigate();
 
   const [activeTab, setActiveTab] = useState('overview');
-  const [tabTransitioning, setTabTransitioning] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [toastMsg, setToastMsg] = useState('');
   const [stats, setStats] = useState(null);
-
-  const handleTabSwitch = (tabId) => {
-    if (tabId === activeTab) return;
-    setTabTransitioning(true);
-    setActiveTab(tabId);
-    setSidebarOpen(false);
-    setTimeout(() => {
-      setTabTransitioning(false);
-    }, 320);
-  };
 
   // Authentication Guard
   useEffect(() => {
@@ -1667,10 +1641,6 @@ export default function AdminDashboard() {
     { id: 'brochure', label: 'Brochure Link', icon: <Link size={18} /> },
   ];
 
-  if (currentUser?.role === 'superadmin' && !stats) {
-    return <Loader text="Loading Super Admin Portal..." fullScreen />;
-  }
-
   return (
     <div className="admin-dashboard">
       {/* Toast */}
@@ -1702,7 +1672,10 @@ export default function AdminDashboard() {
           {sidebarItems.map(item => (
             <button
               key={item.id}
-              onClick={() => handleTabSwitch(item.id)}
+              onClick={() => {
+                setActiveTab(item.id);
+                setSidebarOpen(false);
+              }}
               className={`sidebar-link ${activeTab === item.id ? 'active' : ''}`}
             >
               <div className="sidebar-link-left">
@@ -1749,24 +1722,16 @@ export default function AdminDashboard() {
         </div>
 
         <div className="admin-sections" style={{ padding: '24px' }}>
-          {tabTransitioning ? (
-            <div style={{ minHeight: '380px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <Loader text={`Loading ${sidebarItems.find(i => i.id === activeTab)?.label || 'Panel'}...`} />
-            </div>
-          ) : (
-            <>
-              {activeTab === 'overview' && <OverviewPanel stats={stats} onSelectTab={handleTabSwitch} />}
-              {activeTab === 'approvals' && <ResultApprovalManager toast={showToast} onRefreshStats={loadStats} />}
-              {activeTab === 'coordinators' && <CoordinatorManager toast={showToast} onRefreshStats={loadStats} />}
-              {activeTab === 'allteams' && <AllTeamsViewer toast={showToast} />}
-              {activeTab === 'auditlogs' && <AuditLogsViewer toast={showToast} />}
-              {activeTab === 'events' && <EventsManager toast={showToast} />}
-              {activeTab === 'scoreboard' && <ScoreboardManager toast={showToast} />}
-              {activeTab === 'team' && <TeamManager toast={showToast} />}
-              {activeTab === 'countdown' && <CountdownManager toast={showToast} />}
-              {activeTab === 'brochure' && <BrochureManager toast={showToast} />}
-            </>
-          )}
+          {activeTab === 'overview' && <OverviewPanel stats={stats} onSelectTab={setActiveTab} />}
+          {activeTab === 'approvals' && <ResultApprovalManager toast={showToast} onRefreshStats={loadStats} />}
+          {activeTab === 'coordinators' && <CoordinatorManager toast={showToast} onRefreshStats={loadStats} />}
+          {activeTab === 'allteams' && <AllTeamsViewer toast={showToast} />}
+          {activeTab === 'auditlogs' && <AuditLogsViewer toast={showToast} />}
+          {activeTab === 'events' && <EventsManager toast={showToast} />}
+          {activeTab === 'scoreboard' && <ScoreboardManager toast={showToast} />}
+          {activeTab === 'team' && <TeamManager toast={showToast} />}
+          {activeTab === 'countdown' && <CountdownManager toast={showToast} />}
+          {activeTab === 'brochure' && <BrochureManager toast={showToast} />}
         </div>
       </main>
     </div>
