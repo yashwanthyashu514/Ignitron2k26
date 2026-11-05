@@ -47,7 +47,7 @@ export default function Home() {
               Ignite your potential. Compete. Innovate. Conquer.
             </p>
             <p className="hero-tagline">
-              December 04–06, 2026 · GMU Campus
+              December 03–05, 2026 · GMU Campus
             </p>
 
             <div className="hero-cta-group">

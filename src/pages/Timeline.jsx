@@ -26,8 +26,8 @@ export default function Timeline() {
     {
       key: 'day1',
       label: 'Day 1',
-      date: 'December 04, 2026',
-      shortDate: 'Dec 04',
+      date: 'December 03, 2026',
+      shortDate: 'Dec 03',
       themeColor: '#00D9FF',
       themeColorRgb: '0, 217, 255',
       tagline: 'Inauguration, Hackathons & Grand Opening',
@@ -35,8 +35,8 @@ export default function Timeline() {
     {
       key: 'day2',
       label: 'Day 2',
-      date: 'December 05, 2026',
-      shortDate: 'Dec 05',
+      date: 'December 04, 2026',
+      shortDate: 'Dec 04',
       themeColor: '#00E676',
       themeColorRgb: '0, 230, 118',
       tagline: 'Robotics, Coding Sprints & Core Competitions',
@@ -44,8 +44,8 @@ export default function Timeline() {
     {
       key: 'day3',
       label: 'Day 3',
-      date: 'December 06, 2026',
-      shortDate: 'Dec 06',
+      date: 'December 05, 2026',
+      shortDate: 'Dec 05',
       themeColor: '#f59e0b',
       themeColorRgb: '245, 158, 11',
       tagline: 'Championship Finals, Valedictory & Celebrations',
@@ -132,7 +132,7 @@ export default function Timeline() {
           </div>
           <h1 className="page-hero-title">Event Timeline</h1>
           <p className="page-hero-sub">
-            December 04 – 06, 2026 · Three days of non-stop engineering, robotics, and competitions
+            December 03 – 05, 2026 · Three days of non-stop engineering, robotics, and competitions
           </p>
 
           {/* Quick Metrics Bar */}

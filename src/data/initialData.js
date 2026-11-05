@@ -727,6 +727,6 @@ export const defaultScoreboard = [
   { id: '6', collegeName: 'Manipal Institute', score: 640 },
 ];
 
-// Target date: December 04, 2026
-export const defaultCountdown = '2026-12-04T09:00:00';
+// Target date: December 03, 2026
+export const defaultCountdown = '2026-12-03T09:00:00';
 export const defaultBrochureLink = 'https://drive.google.com/file/ignitron2k26-brochure';

@@ -7,9 +7,9 @@ export default function Timeline() {
   const [selectedDay, setSelectedDay] = useState('all');
 
   const days = [
-    { key: 'day1', label: 'Day 1', date: 'December 04, 2026', color: '#00D9FF', icon: '' },
-    { key: 'day2', label: 'Day 2', date: 'December 05, 2026', color: '#00E676', icon: '' },
-    { key: 'day3', label: 'Day 3', date: 'December 06, 2026', color: '#f59e0b', icon: '' },
+    { key: 'day1', label: 'Day 1', date: 'December 03, 2026', color: '#00D9FF', icon: '' },
+    { key: 'day2', label: 'Day 2', date: 'December 04, 2026', color: '#00E676', icon: '' },
+    { key: 'day3', label: 'Day 3', date: 'December 05, 2026', color: '#f59e0b', icon: '' },
   ];
 
   const visibleDays = selectedDay === 'all' ? days : days.filter(d => d.key === selectedDay);
@@ -20,7 +20,7 @@ export default function Timeline() {
         <div className="section-badge">Official Schedule</div>
         <h2 className="section-title">Event Timeline</h2>
         <p className="section-sub">
-          December 04 – 06, 2026 · Three days of non-stop innovation, hackathons, and competitions
+          December 03 – 05, 2026 · Three days of non-stop innovation, hackathons, and competitions
         </p>
       </div>
 
