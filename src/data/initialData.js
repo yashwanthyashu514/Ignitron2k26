@@ -1,10 +1,4 @@
-﻿// Initial data for the Ignitron 2K26 website
-// All data is stored in localStorage
-
-export const ADMIN_CREDENTIALS = {
-  username: 'ignitron2k26',
-  password: 'IgnitronGMUSA2026',
-};
+// Initial data for the Ignitron 2K26 website
 
 export const defaultEvents = [
   // --- DAY 1 ---

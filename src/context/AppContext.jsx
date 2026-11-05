@@ -22,8 +22,8 @@ function loadFromStorage(key, defaultValue) {
 function saveToStorage(key, value) {
   try {
     localStorage.setItem(key, JSON.stringify(value));
-  } catch {
-    console.error('Failed to save to localStorage');
+  } catch (err) {
+    console.error('Failed to save to localStorage:', err);
   }
 }
 
@@ -37,7 +37,54 @@ export function AppProvider({ children }) {
   const [scoreboard, setScoreboardState] = useState(() => loadFromStorage('ignitron_scoreboard', defaultScoreboard));
   const [countdown, setCountdownState] = useState(() => loadFromStorage('ignitron_countdown_v3', defaultCountdown));
   const [brochureLink, setBrochureLinkState] = useState(() => loadFromStorage('ignitron_brochure', defaultBrochureLink));
-  const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(() => sessionStorage.getItem('ignitron_admin') === 'true');
+
+  // Authentication State
+  const [authToken, setAuthToken] = useState(() => localStorage.getItem('ignitron_token') || '');
+  const [currentUser, setCurrentUser] = useState(() => loadFromStorage('ignitron_user', null));
+  const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(() => {
+    const token = localStorage.getItem('ignitron_token');
+    return Boolean(token);
+  });
+
+  // Fetch Public Live Scoreboard from MongoDB Backend
+  const refreshScoreboard = useCallback(async () => {
+    try {
+      const res = await fetch('/api/scoreboard');
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data) && data.length > 0) {
+          setScoreboardState(data);
+          saveToStorage('ignitron_scoreboard', data);
+        }
+      }
+    } catch {
+      // Offline fallback silently keeps cached scoreboard
+    }
+  }, []);
+
+  // Fetch Events from MongoDB Backend
+  const refreshEvents = useCallback(async () => {
+    try {
+      const res = await fetch('/api/events');
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data) && data.length > 0) {
+          setEventsState(data);
+          saveToStorage('ignitron_events_v6', data);
+        }
+      }
+    } catch {
+      // Offline fallback
+    }
+  }, []);
+
+  // Live Scoreboard updates (auto-refresh interval)
+  useEffect(() => {
+    refreshScoreboard();
+    refreshEvents();
+    const interval = setInterval(refreshScoreboard, 5000);
+    return () => clearInterval(interval);
+  }, [refreshScoreboard, refreshEvents]);
 
   const setEvents = useCallback((val) => {
     const updated = typeof val === 'function' ? val(events) : val;
@@ -73,29 +120,89 @@ export function AppProvider({ children }) {
     saveToStorage('ignitron_brochure', val);
   }, []);
 
-  const adminLogin = useCallback((username, password) => {
-    if (username === 'ignitron2k26' && password === 'IgnitronGMUSA2026') {
-      setIsAdminLoggedIn(true);
-      sessionStorage.setItem('ignitron_admin', 'true');
-      return true;
+  // Secure API helper
+  const apiFetch = useCallback(async (url, options = {}) => {
+    const headers = {
+      'Content-Type': 'application/json',
+      ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
+      ...(options.headers || {}),
+    };
+    const res = await fetch(url, { ...options, headers });
+    if (res.status === 401) {
+      setAuthToken('');
+      setCurrentUser(null);
+      setIsAdminLoggedIn(false);
+      localStorage.removeItem('ignitron_token');
+      localStorage.removeItem('ignitron_user');
     }
-    return false;
+    return res;
+  }, [authToken]);
+
+  // Role-Based Login Handler
+  const adminLogin = useCallback(async (username, password) => {
+    try {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        return { success: false, error: data.error || 'Authentication failed' };
+      }
+
+      setAuthToken(data.token);
+      setCurrentUser(data.user);
+      setIsAdminLoggedIn(true);
+
+      localStorage.setItem('ignitron_token', data.token);
+      localStorage.setItem('ignitron_user', JSON.stringify(data.user));
+
+      return { success: true, user: data.user };
+    } catch (err) {
+      return { success: false, error: 'Cannot connect to backend server. Make sure server is running on port 5000.' };
+    }
   }, []);
 
-  const adminLogout = useCallback(() => {
-    setIsAdminLoggedIn(false);
-    sessionStorage.removeItem('ignitron_admin');
-  }, []);
+  // Logout Handler
+  const adminLogout = useCallback(async () => {
+    try {
+      if (authToken) {
+        await fetch('/api/auth/logout', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${authToken}`,
+          },
+        });
+      }
+    } catch {
+      // Ignore network error on logout
+    } finally {
+      setAuthToken('');
+      setCurrentUser(null);
+      setIsAdminLoggedIn(false);
+      localStorage.removeItem('ignitron_token');
+      localStorage.removeItem('ignitron_user');
+      sessionStorage.removeItem('ignitron_admin');
+    }
+  }, [authToken]);
 
   return (
     <AppContext.Provider value={{
-      events, setEvents,
+      events, setEvents, refreshEvents,
       teamMembers, setTeamMembers,
       timeline, setTimeline,
-      scoreboard, setScoreboard,
+      scoreboard, setScoreboard, refreshScoreboard,
       countdown, setCountdown,
       brochureLink, setBrochureLink,
-      isAdminLoggedIn, adminLogin, adminLogout,
+      isAdminLoggedIn,
+      currentUser,
+      authToken,
+      adminLogin,
+      adminLogout,
+      apiFetch,
     }}>
       {children}
     </AppContext.Provider>

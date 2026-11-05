@@ -9,6 +9,7 @@ import Gallery from './pages/Gallery';
 import Timeline from './pages/Timeline';
 import AdminLogin from './pages/AdminLogin';
 import AdminDashboard from './pages/AdminDashboard';
+import CoordinatorDashboard from './pages/CoordinatorDashboard';
 import './App.css';
 
 function PublicLayout({ children }) {
@@ -33,6 +34,7 @@ export default function App() {
           <Route path="/gallery" element={<PublicLayout><Gallery /></PublicLayout>} />
           <Route path="/admin" element={<AdminLogin />} />
           <Route path="/admin/dashboard" element={<AdminDashboard />} />
+          <Route path="/coordinator/dashboard" element={<CoordinatorDashboard />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </BrowserRouter>
