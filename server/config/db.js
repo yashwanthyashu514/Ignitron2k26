@@ -1,25 +1,49 @@
 import mongoose from 'mongoose';
 
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/ignitron2k26';
+// Cache connection in global scope for Vercel Serverless function container reuse
+let cached = global.mongoose;
+
+if (!cached) {
+  cached = global.mongoose = { conn: null, promise: null };
+}
 
 export async function connectDB() {
-  if (mongoose.connection.readyState >= 1) {
-    return mongoose.connection;
+  const uri = process.env.MONGODB_URI || (process.env.VERCEL ? null : 'mongodb://127.0.0.1:27017/ignitron2k26');
+
+  if (!uri) {
+    const errMsg = '[MongoDB] MONGODB_URI environment variable is NOT set in Vercel!';
+    console.error(errMsg);
+    throw new Error(errMsg);
+  }
+
+  if (cached.conn && mongoose.connection.readyState === 1) {
+    return cached.conn;
+  }
+
+  if (!cached.promise) {
+    const opts = {
+      bufferCommands: false,
+      serverSelectionTimeoutMS: 5000,
+    };
+
+    console.log(`[MongoDB] Connecting to: ${uri.replace(/:([^:@]+)@/, ':****@')}`);
+
+    cached.promise = mongoose.connect(uri, opts).then((mongooseInstance) => {
+      console.log(`[MongoDB] Connected successfully to host: ${mongooseInstance.connection.host}`);
+      return mongooseInstance;
+    }).catch(err => {
+      cached.promise = null;
+      console.error(`[MongoDB] Connection failed: ${err.message}`);
+      throw err;
+    });
   }
 
   try {
-    const conn = await mongoose.connect(MONGODB_URI, {
-      serverSelectionTimeoutMS: 5000,
-    });
-    console.log(`[MongoDB] Connected successfully to: ${conn.connection.host}/${conn.connection.name}`);
-    return conn;
+    cached.conn = await cached.promise;
   } catch (err) {
-    console.error(`[MongoDB] Connection error: ${err.message}`);
-    if (!process.env.VERCEL) {
-      console.warn(`[MongoDB] Retrying connection in 5 seconds...`);
-      setTimeout(connectDB, 5000);
-    } else {
-      throw err;
-    }
+    cached.promise = null;
+    throw err;
   }
+
+  return cached.conn;
 }

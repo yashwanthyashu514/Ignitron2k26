@@ -4,6 +4,7 @@ import bcrypt from 'bcryptjs';
 import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import mongoose from 'mongoose';
 import { connectDB } from './config/db.js';
 import { User } from './models/User.js';
 import { Event } from './models/Event.js';
@@ -47,7 +48,14 @@ app.use('/api/audit-logs', auditLogRoutes);
 app.use('/api/overview', overviewRoutes);
 
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', service: 'Ignitron 2K26 Backend', timestamp: new Date() });
+  res.json({
+    status: 'ok',
+    service: 'Ignitron 2K26 Backend',
+    timestamp: new Date(),
+    mongoConfigured: !!process.env.MONGODB_URI,
+    mongoPrefix: process.env.MONGODB_URI ? process.env.MONGODB_URI.substring(0, 16) : 'MISSING',
+    dbState: mongoose.connection.readyState, // 0 = disconnected, 1 = connected, 2 = connecting
+  });
 });
 
 // ── Serve React build in production ──────────────────────────────────────────
