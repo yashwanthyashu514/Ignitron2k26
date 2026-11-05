@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
+import Loader from '../components/Loader';
 import {
   LogOut, Plus, Trash2, Edit3, Save, X, Upload,
   Calendar, Users, Trophy, Clock, Link, FileText,
@@ -1640,6 +1641,10 @@ export default function AdminDashboard() {
     { id: 'countdown', label: 'Countdown Timer', icon: <Clock size={18} /> },
     { id: 'brochure', label: 'Brochure Link', icon: <Link size={18} /> },
   ];
+
+  if (currentUser?.role === 'superadmin' && !stats) {
+    return <Loader text="Loading Super Admin Portal..." fullScreen />;
+  }
 
   return (
     <div className="admin-dashboard">

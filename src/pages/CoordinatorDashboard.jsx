@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
+import Loader from '../components/Loader';
 import {
   Users,
   Trophy,
@@ -426,6 +427,10 @@ export default function CoordinatorDashboard() {
   const scoredTeamsCount = teams.filter(t => t.scoreStatus !== 'Not Scored').length;
   const isAllScored = teams.length > 0 && scoredTeamsCount === teams.length;
   const progressPercent = teams.length > 0 ? Math.round((scoredTeamsCount / teams.length) * 100) : 0;
+
+  if (loading && !eventData) {
+    return <Loader text="Loading Coordinator Workspace..." fullScreen />;
+  }
 
   return (
     <div className="coord-dashboard-root">
