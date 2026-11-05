@@ -12,3 +12,4 @@ export default function Loader({ text = 'Loading...', fullScreen = false, size =
     </div>
   );
 }
+

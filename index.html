@@ -13,70 +13,9 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Michroma&family=Oxanium:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-    <style>
-      /* Initial Pre-Loader styles for zero-delay splash screen */
-      .initial-splash {
-        position: fixed;
-        inset: 0;
-        background: #030712;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        gap: 22px;
-        z-index: 99999;
-      }
-      .loader {
-        width: 65px;
-        aspect-ratio: 1;
-        position: relative;
-        filter: drop-shadow(0 0 12px rgba(0, 217, 255, 0.45));
-      }
-      .loader:before,
-      .loader:after {
-        content: "";
-        position: absolute;
-        border-radius: 50px;
-        box-shadow: 0 0 0 3px inset #fff;
-        animation: l5 2.5s infinite;
-      }
-      .loader:after {
-        animation-delay: -1.25s;
-        border-radius: 0;
-      }
-      @keyframes l5{
-        0%    {inset:0    35px 35px 0   }
-        12.5% {inset:0    35px 0    0   }
-        25%   {inset:35px 35px 0    0   }
-        37.5% {inset:35px 0    0    0   }
-        50%   {inset:35px 0    0    35px}
-        62.5% {inset:0    0    0    35px}
-        75%   {inset:0    0    35px 35px}
-        87.5% {inset:0    0    35px 0   }
-        100%  {inset:0    35px 35px 0   }
-      }
-      .initial-splash-text {
-        font-family: 'Oxanium', monospace, sans-serif;
-        font-size: 13px;
-        font-weight: 700;
-        letter-spacing: 0.25em;
-        text-transform: uppercase;
-        color: #00D9FF;
-        animation: splashPulse 1.8s ease-in-out infinite alternate;
-      }
-      @keyframes splashPulse {
-        from { opacity: 0.55; }
-        to { opacity: 1; text-shadow: 0 0 10px rgba(0, 217, 255, 0.7); }
-      }
-    </style>
   </head>
   <body>
-    <div id="root">
-      <div class="initial-splash">
-        <div class="loader"></div>
-        <div class="initial-splash-text">IGNITRON 2K26</div>
-      </div>
-    </div>
+    <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>
