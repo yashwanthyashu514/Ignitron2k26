@@ -169,4 +169,11 @@ async function startServer() {
   });
 }
 
-startServer();
+// When running on local dev or Render, start standalone HTTP server.
+// On Vercel, the app is imported and executed as a Serverless function.
+if (!process.env.VERCEL) {
+  startServer();
+}
+
+export { seedInitialData, connectDB };
+export default app;

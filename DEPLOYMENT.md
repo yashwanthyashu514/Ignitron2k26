@@ -126,3 +126,4 @@ If you prefer Railway:
 2. Select `yashwanthyashu514/Ignitron2k26`.
 3. In Variables, add `MONGODB_URI`, `JWT_SECRET`, and `NODE_ENV=production`.
 4. Railway will automatically build and assign a domain (`xxx.up.railway.app`).
+
