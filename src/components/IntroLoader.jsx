@@ -122,7 +122,7 @@ export default function IntroLoader({
     const onTS = (e) => (ty = e.touches[0].clientY);
     const onTM = (e) => ty - e.touches[0].clientY > 35 && startExit();
     const onKey = (e) =>
-      ["Enter", " ", "ArrowDown", "PageDown", "Escape"].includes(e.key) && startExit();
+      ["Enter", " ", "ArrowDown", "PageDown"].includes(e.key) && startExit();
     window.addEventListener("wheel", onWheel, { passive: true });
     window.addEventListener("touchstart", onTS, { passive: true });
     window.addEventListener("touchmove", onTM, { passive: true });
