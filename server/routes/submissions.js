@@ -170,14 +170,12 @@ router.post('/:id/approve', requireSuperAdmin, async (req, res) => {
       { $set: { scoreStatus: 'Approved' } },
     );
 
-    // ── Update public scoreboard ──────────────────────────────────────
-    // Points: 1st → 100, 2nd → 75, 3rd → 50, rest → 20
-    const rankPoints = { 1: 100, 2: 75, 3: 50 };
-
+    // ── Update public scoreboard with exact evaluated marks ───────────
     for (const entry of sub.finalScores) {
       const college = (entry.leaderCollege || '').trim();
       if (!college) continue;
-      const pts = rankPoints[entry.rank] || 20;
+      // Award the exact evaluation marks scored by the team
+      const pts = Number(entry.totalScore) || 0;
 
       const escapedCollege = college.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
       let rec = await Scoreboard.findOne({
