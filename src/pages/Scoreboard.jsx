@@ -84,15 +84,6 @@ export default function Scoreboard() {
                 <div className="rankings-rank">{rankIcon(i + 1)}</div>
                 <div className="rankings-college">
                   <span className="college-name">{entry.collegeName}</span>
-                  {entry.eventWins && entry.eventWins.length > 0 && (
-                    <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', marginTop: '4px' }}>
-                      {entry.eventWins.map((w, wIdx) => (
-                        <span key={wIdx} style={{ fontSize: '0.65rem', background: 'rgba(245, 158, 11, 0.15)', color: '#f59e0b', padding: '1px 6px', borderRadius: '4px', border: '1px solid rgba(245, 158, 11, 0.3)' }}>
-                          ★ {w.eventName} (#{w.rank})
-                        </span>
-                      ))}
-                    </div>
-                  )}
                 </div>
                 <div className="rankings-score">
                   <span className="score-badge">{entry.score}</span>
