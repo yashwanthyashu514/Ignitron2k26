@@ -15,7 +15,8 @@ router.get('/', async (req, res) => {
   try {
     const coordinators = await User.find({ role: 'coordinator' })
       .select('-password')
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 })
+      .lean();
     res.json(coordinators);
   } catch (err) {
     res.status(500).json({ error: err.message });

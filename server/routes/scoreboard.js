@@ -8,7 +8,7 @@ const router = express.Router();
 // 1. GET public scoreboard (Only approved results)
 router.get('/', async (req, res) => {
   try {
-    const list = await Scoreboard.find().sort({ score: -1, collegeName: 1 });
+    const list = await Scoreboard.find().sort({ score: -1, collegeName: 1 }).lean();
     // Transform to include id for frontend compatibility
     const formatted = list.map(item => ({
       id: item._id.toString(),

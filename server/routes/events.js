@@ -8,7 +8,7 @@ const router = express.Router();
 // 1. GET all events (Public / Authenticated)
 router.get('/', async (req, res) => {
   try {
-    const events = await Event.find().sort({ day: 1, name: 1 });
+    const events = await Event.find().sort({ day: 1, name: 1 }).lean();
     res.json(events);
   } catch (err) {
     res.status(500).json({ error: err.message });

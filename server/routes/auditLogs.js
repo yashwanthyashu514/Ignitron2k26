@@ -11,7 +11,8 @@ router.get('/my-logs', async (req, res) => {
   try {
     const logs = await AuditLog.find({ coordinatorId: req.user._id.toString() })
       .sort({ timestamp: -1 })
-      .limit(50);
+      .limit(50)
+      .lean();
     res.json(logs);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -72,7 +73,7 @@ router.get('/', requireSuperAdmin, async (req, res) => {
     const skip = (pageNum - 1) * limitNum;
 
     const [logs, total] = await Promise.all([
-      AuditLog.find(query).sort({ timestamp: -1 }).skip(skip).limit(limitNum),
+      AuditLog.find(query).sort({ timestamp: -1 }).skip(skip).limit(limitNum).lean(),
       AuditLog.countDocuments(query),
     ]);
 

@@ -85,41 +85,40 @@ function getScoringCriteria(eventName, isHackathon) {
 // ── Seed Initial Data ─────────────────────────────────────────────────────────
 async function seedInitialData() {
   try {
-    // 1. Super Admin accounts
-    const adminAccounts = [
-      { username: 'ignitrongmusa2026', rawUsername: 'IgnitronGMUSA2026', pass: 'ignitron2k26' },
-      { username: 'ignitron2k26', rawUsername: 'ignitron2k26', pass: 'IgnitronGMUSA2026' },
-    ];
+    // 1. Super Admin accounts (quick count check before querying)
+    const adminCount = await User.countDocuments({ role: 'superadmin' });
+    if (adminCount < 2) {
+      const adminAccounts = [
+        { username: 'ignitrongmusa2026', rawUsername: 'IgnitronGMUSA2026', pass: 'ignitron2k26' },
+        { username: 'ignitron2k26', rawUsername: 'ignitron2k26', pass: 'IgnitronGMUSA2026' },
+      ];
 
-    for (const acc of adminAccounts) {
-      const existing = await User.findOne({ username: acc.username });
-      if (!existing) {
-        const hashed = await bcrypt.hash(acc.pass, 10);
-        await User.create({
-          username: acc.username,
-          password: hashed,
-          name: 'Super Administrator',
-          role: 'superadmin',
-          email: 'admin@ignitron2k26.com',
-          mobile: '+91 9999999999',
-          department: 'Event Operations & Management',
-          status: 'active',
-          mustChangePassword: false,
-        });
-        console.log(`[Seed] Super Admin created: ${acc.username}`);
+      for (const acc of adminAccounts) {
+        const existing = await User.findOne({ username: acc.username }).lean();
+        if (!existing) {
+          const hashed = await bcrypt.hash(acc.pass, 10);
+          await User.create({
+            username: acc.username,
+            password: hashed,
+            name: 'Super Administrator',
+            role: 'superadmin',
+            email: 'admin@ignitron2k26.com',
+            mobile: '+91 9999999999',
+            department: 'Event Operations & Management',
+            status: 'active',
+            mustChangePassword: false,
+          });
+          console.log(`[Seed] Super Admin created: ${acc.username}`);
+        }
       }
     }
 
-    // 2. All events (29 events)
-    for (const ev of defaultEvents) {
-      const isHack = ev.name.toLowerCase().includes('code rush') || String(ev.id) === '4';
-      const criteria = getScoringCriteria(ev.name, isHack);
-
-      const existing = await Event.findOne({
-        $or: [{ id: String(ev.id) }, { name: ev.name }],
-      });
-      if (!existing) {
-        await Event.create({
+    // 2. All events (fast count check to avoid 29 sequential queries on every cold start)
+    const eventCount = await Event.countDocuments();
+    if (eventCount === 0) {
+      const docsToInsert = defaultEvents.map(ev => {
+        const isHack = ev.name.toLowerCase().includes('code rush') || String(ev.id) === '4';
+        return {
           id: String(ev.id),
           name: ev.name,
           time: ev.time || '',
@@ -132,14 +131,11 @@ async function seedInitialData() {
           registrationLink: ev.registrationLink || '',
           maxTeamSize: ev.maxTeamSize || 4,
           isHackathon: isHack,
-          scoringCriteria: criteria,
-        });
-      } else {
-        // Ensure criteria and isHackathon are updated
-        existing.isHackathon = isHack;
-        existing.scoringCriteria = criteria;
-        await existing.save();
-      }
+          scoringCriteria: getScoringCriteria(ev.name, isHack),
+        };
+      });
+      await Event.insertMany(docsToInsert);
+      console.log(`[Seed] Initialized ${docsToInsert.length} events`);
     }
 
     // 3. Default scoreboard colleges (empty scores — real scores come from event results)

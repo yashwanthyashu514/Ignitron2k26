@@ -27,9 +27,9 @@ router.get('/stats', verifyToken, requireSuperAdmin, async (req, res) => {
       ScoreSubmission.countDocuments({ status: 'pending' }),
       ScoreSubmission.countDocuments({ status: 'approved' }),
       ScoreSubmission.countDocuments({ status: { $in: ['rejected', 'correction_requested'] } }),
-      AuditLog.find().sort({ timestamp: -1 }).limit(10),
-      ScoreSubmission.find().sort({ submittedAt: -1 }),
-      Team.find().select('eventName scoreStatus totalScore'),
+      AuditLog.find().sort({ timestamp: -1 }).limit(10).lean(),
+      ScoreSubmission.find().select('eventName coordinatorName status submittedAt teamsCount approvedAt approvedBy').sort({ submittedAt: -1 }).limit(5).lean(),
+      Team.find().select('eventName scoreStatus totalScore').lean(),
     ]);
 
     // Compute event-wise breakdown
@@ -61,7 +61,7 @@ router.get('/stats', verifyToken, requireSuperAdmin, async (req, res) => {
       rejectedResults,
       eventPerformance,
       recentLogs,
-      recentSubmissions: submissions.slice(0, 5),
+      recentSubmissions: submissions,
     });
   } catch (err) {
     res.status(500).json({ error: err.message });

@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useApp } from '../context/AppContext';
+import { SkeletonKPI, SkeletonTable, SkeletonCards, CyberErrorState } from '../components/CyberSkeleton';
 import {
   LogOut, Plus, Trash2, Edit3, Save, X, Upload,
   Calendar, Users, Trophy, Clock, Link, FileText,
@@ -42,7 +44,45 @@ function Section({ title, icon, children, defaultOpen = true }) {
 // ==========================================
 // 1. OVERVIEW & METRICS PANEL (Super Admin)
 // ==========================================
-function OverviewPanel({ stats, onSelectTab }) {
+function OverviewPanel({ stats, loading, isError, onRetry, onSelectTab }) {
+  if (loading && !stats) {
+    return (
+      <div>
+        <SkeletonKPI count={6} />
+        <div className="admin-overview-grid" style={{ marginTop: '20px' }}>
+          <div className="cyber-skeleton-card" style={{ minHeight: '260px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px' }}>
+              <div className="cyber-skeleton-line" style={{ width: '40%', height: '20px', borderRadius: '4px' }} />
+              <div className="cyber-skeleton-line" style={{ width: '20%', height: '16px', borderRadius: '4px' }} />
+            </div>
+            {[1, 2, 3, 4].map(k => (
+              <div key={k} className="cyber-skeleton-line" style={{ width: '100%', height: '42px', borderRadius: '8px', marginBottom: '10px' }} />
+            ))}
+          </div>
+          <div className="cyber-skeleton-card" style={{ minHeight: '260px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px' }}>
+              <div className="cyber-skeleton-line" style={{ width: '45%', height: '20px', borderRadius: '4px' }} />
+              <div className="cyber-skeleton-line" style={{ width: '20%', height: '16px', borderRadius: '4px' }} />
+            </div>
+            {[1, 2, 3, 4].map(k => (
+              <div key={k} className="cyber-skeleton-line" style={{ width: '100%', height: '42px', borderRadius: '8px', marginBottom: '10px' }} />
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <CyberErrorState
+        title="Operations Telemetry Offline"
+        message="Unable to fetch overview metrics from the live server. Please verify your connection."
+        onRetry={onRetry}
+      />
+    );
+  }
+
   return (
     <div>
       {/* Top 6 KPI Cards */}
@@ -145,8 +185,7 @@ function OverviewPanel({ stats, onSelectTab }) {
 // ====================================================
 function ResultApprovalManager({ toast, onRefreshStats }) {
   const { apiFetch, currentUser } = useApp();
-  const [submissions, setSubmissions] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
 
   // Score details modal
   const [selectedSubmission, setSelectedSubmission] = useState(null);
@@ -157,25 +196,24 @@ function ResultApprovalManager({ toast, onRefreshStats }) {
   const [rejectionRemarks, setRejectionRemarks] = useState('');
   const [isCorrectionRequest, setIsCorrectionRequest] = useState(false);
 
-  const fetchSubmissions = useCallback(async () => {
-    if (!currentUser || currentUser.role !== 'superadmin') return;
-    try {
-      setLoading(true);
+  const {
+    data: submissions = [],
+    isLoading: loading,
+    isError,
+    error,
+    refetch: fetchSubmissions,
+  } = useQuery({
+    queryKey: ['admin', 'submissions'],
+    queryFn: async () => {
       const res = await apiFetch('/api/submissions');
-      if (res.ok) {
-        const data = await res.json();
-        setSubmissions(data);
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error || 'Failed to fetch score submissions');
       }
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  }, [apiFetch, currentUser]);
-
-  useEffect(() => {
-    fetchSubmissions();
-  }, [fetchSubmissions]);
+      return res.json();
+    },
+    enabled: !!currentUser && currentUser.role === 'superadmin',
+  });
 
   // Approve Results
   const handleApprove = async (sub) => {
@@ -189,7 +227,8 @@ function ResultApprovalManager({ toast, onRefreshStats }) {
         return;
       }
       toast(`Results for "${sub.eventName}" approved! Public scoreboard updated.`);
-      fetchSubmissions();
+      queryClient.invalidateQueries({ queryKey: ['admin', 'submissions'] });
+      queryClient.invalidateQueries({ queryKey: ['admin', 'stats'] });
       if (onRefreshStats) onRefreshStats();
     } catch {
       toast('Network error during approval');
@@ -217,7 +256,8 @@ function ResultApprovalManager({ toast, onRefreshStats }) {
       toast(isCorrectionRequest ? 'Correction requested. Coordinator can now adjust scores.' : 'Submission rejected.');
       setRejectingSub(null);
       setRejectionRemarks('');
-      fetchSubmissions();
+      queryClient.invalidateQueries({ queryKey: ['admin', 'submissions'] });
+      queryClient.invalidateQueries({ queryKey: ['admin', 'stats'] });
       if (onRefreshStats) onRefreshStats();
     } catch {
       toast('Network error');
@@ -235,7 +275,8 @@ function ResultApprovalManager({ toast, onRefreshStats }) {
         return;
       }
       toast(`Submission for "${sub.eventName}" reopened.`);
-      fetchSubmissions();
+      queryClient.invalidateQueries({ queryKey: ['admin', 'submissions'] });
+      queryClient.invalidateQueries({ queryKey: ['admin', 'stats'] });
       if (onRefreshStats) onRefreshStats();
     } catch {
       toast('Network error');
@@ -264,12 +305,20 @@ function ResultApprovalManager({ toast, onRefreshStats }) {
             Review coordinator submissions, view team scores, download official reports, and approve scores into the public scoreboard.
           </p>
         </div>
-        <button onClick={fetchSubmissions} style={{ background: 'rgba(255, 255, 255, 0.08)', border: '1px solid rgba(255, 255, 255, 0.1)', color: '#cbd5e1', padding: '8px 14px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
+        <button onClick={() => fetchSubmissions()} style={{ background: 'rgba(255, 255, 255, 0.08)', border: '1px solid rgba(255, 255, 255, 0.1)', color: '#cbd5e1', padding: '8px 14px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
           <RefreshCw size={14} /> Refresh
         </button>
       </div>
 
-      {submissions.length === 0 ? (
+      {loading ? (
+        <SkeletonCards count={4} />
+      ) : isError ? (
+        <CyberErrorState
+          title="Submission Telemetry Offline"
+          message={error?.message || 'Failed to stream score evaluations from database server.'}
+          onRetry={fetchSubmissions}
+        />
+      ) : submissions.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '48px 20px', background: 'rgba(30, 41, 59, 0.4)', borderRadius: '12px', border: '1px dashed rgba(255, 255, 255, 0.1)' }}>
           <Clock size={40} color="#64748b" style={{ margin: '0 auto 12px auto' }} />
           <h3 style={{ color: '#cbd5e1' }}>No Score Submissions Yet</h3>
@@ -480,9 +529,7 @@ function ResultApprovalManager({ toast, onRefreshStats }) {
 // ====================================================
 function CoordinatorManager({ toast, onRefreshStats }) {
   const { apiFetch, currentUser } = useApp();
-  const [coordinators, setCoordinators] = useState([]);
-  const [eventsList, setEventsList] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
 
   // Modal
   const [showModal, setShowModal] = useState(false);
@@ -503,26 +550,34 @@ function CoordinatorManager({ toast, onRefreshStats }) {
   const [resetModalUser, setResetModalUser] = useState(null);
   const [newPassword, setNewPassword] = useState('');
 
-  const loadData = useCallback(async () => {
-    if (!currentUser || currentUser.role !== 'superadmin') return;
-    try {
-      setLoading(true);
-      const [coordRes, evRes] = await Promise.all([
-        apiFetch('/api/coordinators'),
-        apiFetch('/api/events'),
-      ]);
-      if (coordRes.ok) setCoordinators(await coordRes.json());
-      if (evRes.ok) setEventsList(await evRes.json());
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  }, [apiFetch, currentUser]);
+  const {
+    data: coordinators = [],
+    isLoading: loading,
+    isError,
+    error,
+    refetch: loadData,
+  } = useQuery({
+    queryKey: ['admin', 'coordinators'],
+    queryFn: async () => {
+      const res = await apiFetch('/api/coordinators');
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || 'Failed to fetch coordinators');
+      }
+      return res.json();
+    },
+    enabled: !!currentUser && currentUser.role === 'superadmin',
+  });
 
-  useEffect(() => {
-    loadData();
-  }, [loadData]);
+  const { data: eventsList = [] } = useQuery({
+    queryKey: ['admin', 'events-list'],
+    queryFn: async () => {
+      const res = await apiFetch('/api/events');
+      if (!res.ok) throw new Error('Failed to fetch events');
+      return res.json();
+    },
+    enabled: !!currentUser && currentUser.role === 'superadmin',
+  });
 
   const handleOpenCreate = () => {
     setEditingCoord(null);
@@ -587,7 +642,8 @@ function CoordinatorManager({ toast, onRefreshStats }) {
 
       setShowModal(false);
       toast(editingCoord ? `Coordinator ${formData.name} updated` : `Coordinator ${formData.name} created successfully!`);
-      loadData();
+      queryClient.invalidateQueries({ queryKey: ['admin', 'coordinators'] });
+      queryClient.invalidateQueries({ queryKey: ['admin', 'stats'] });
       if (onRefreshStats) onRefreshStats();
     } catch {
       setFormError('Network error while saving coordinator');
@@ -604,7 +660,7 @@ function CoordinatorManager({ toast, onRefreshStats }) {
       });
       if (res.ok) {
         toast(`Coordinator account is now ${nextStatus}`);
-        loadData();
+        queryClient.invalidateQueries({ queryKey: ['admin', 'coordinators'] });
       }
     } catch {
       toast('Failed to change status');
@@ -646,7 +702,8 @@ function CoordinatorManager({ toast, onRefreshStats }) {
       const res = await apiFetch(`/api/coordinators/${coord._id}`, { method: 'DELETE' });
       if (res.ok) {
         toast(`Coordinator "${coord.name}" deleted`);
-        loadData();
+        queryClient.invalidateQueries({ queryKey: ['admin', 'coordinators'] });
+        queryClient.invalidateQueries({ queryKey: ['admin', 'stats'] });
         if (onRefreshStats) onRefreshStats();
       }
     } catch {
@@ -673,7 +730,16 @@ function CoordinatorManager({ toast, onRefreshStats }) {
       </div>
 
       {/* Coordinators Table */}
-      <div className="admin-table-container">
+      {isError ? (
+        <CyberErrorState message={error?.message || 'Failed to load coordinator telemetry'} onRetry={loadData} />
+      ) : loading ? (
+        <SkeletonTable
+          rows={6}
+          cols={7}
+          headers={['Coordinator Name', 'Username / ID', 'Assigned Event', 'Department', 'Contact', 'Status', 'Actions']}
+        />
+      ) : (
+        <div className="admin-table-container">
         <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.85rem' }}>
           <thead>
             <tr style={{ background: '#0f172a', color: '#94a3b8', borderBottom: '1px solid rgba(255, 255, 255, 0.1)' }}>
@@ -757,7 +823,8 @@ function CoordinatorManager({ toast, onRefreshStats }) {
             )}
           </tbody>
         </table>
-      </div>
+        </div>
+      )}
 
       {/* CREATE / EDIT MODAL */}
       {showModal && (
@@ -921,33 +988,35 @@ function CoordinatorManager({ toast, onRefreshStats }) {
 // ====================================================
 function AllTeamsViewer({ toast }) {
   const { apiFetch, currentUser } = useApp();
-  const [teams, setTeams] = useState([]);
-  const [eventsList, setEventsList] = useState([]);
   const [selectedEvent, setSelectedEvent] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
-  const [loading, setLoading] = useState(true);
 
-  const loadTeams = useCallback(async () => {
-    if (!currentUser || currentUser.role !== 'superadmin') return;
-    try {
-      setLoading(true);
+  const {
+    data: teams = [],
+    isLoading: loading,
+    isError,
+    error,
+    refetch: loadTeams,
+  } = useQuery({
+    queryKey: ['admin', 'teams', selectedEvent],
+    queryFn: async () => {
       const url = selectedEvent !== 'all' ? `/api/teams?event=${encodeURIComponent(selectedEvent)}` : '/api/teams';
-      const [tRes, evRes] = await Promise.all([
-        apiFetch(url),
-        apiFetch('/api/events'),
-      ]);
-      if (tRes.ok) setTeams(await tRes.json());
-      if (evRes.ok) setEventsList(await evRes.json());
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  }, [apiFetch, currentUser, selectedEvent]);
+      const res = await apiFetch(url);
+      if (!res.ok) throw new Error('Failed to fetch registered teams');
+      return res.json();
+    },
+    enabled: !!currentUser && currentUser.role === 'superadmin',
+  });
 
-  useEffect(() => {
-    loadTeams();
-  }, [loadTeams]);
+  const { data: eventsList = [] } = useQuery({
+    queryKey: ['admin', 'events-list'],
+    queryFn: async () => {
+      const res = await apiFetch('/api/events');
+      if (!res.ok) throw new Error('Failed to fetch events');
+      return res.json();
+    },
+    enabled: !!currentUser && currentUser.role === 'superadmin',
+  });
 
   const filteredTeams = teams.filter(t => {
     if (!searchQuery) return true;
@@ -998,12 +1067,17 @@ function AllTeamsViewer({ toast }) {
         </div>
       </div>
 
-      <div className="admin-teams-grid">
-        {filteredTeams.length === 0 ? (
-          <div style={{ gridColumn: '1 / -1', padding: '40px', textAlign: 'center', color: '#94a3b8', background: 'rgba(30, 41, 59, 0.4)', borderRadius: '12px' }}>
-            No registered teams found matching criteria.
-          </div>
-        ) : (
+      {isError ? (
+        <CyberErrorState message={error?.message || 'Failed to load teams telemetry'} onRetry={loadTeams} />
+      ) : loading ? (
+        <SkeletonCards count={6} />
+      ) : (
+        <div className="admin-teams-grid">
+          {filteredTeams.length === 0 ? (
+            <div style={{ gridColumn: '1 / -1', padding: '40px', textAlign: 'center', color: '#94a3b8', background: 'rgba(30, 41, 59, 0.4)', borderRadius: '12px' }}>
+              No registered teams found matching criteria.
+            </div>
+          ) : (
           filteredTeams.map((t) => (
             <div
               key={t._id}
@@ -1058,7 +1132,8 @@ function AllTeamsViewer({ toast }) {
             </div>
           ))
         )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -1067,20 +1142,20 @@ function AllTeamsViewer({ toast }) {
 // 5. COORDINATOR ACTIVITY LOGS (Audit Log System)
 // ====================================================
 function AuditLogsViewer({ toast }) {
-  const { apiFetch, authToken, currentUser } = useApp();
-  const [logs, setLogs] = useState([]);
-  const [total, setTotal] = useState(0);
+  const { apiFetch, currentUser } = useApp();
   const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [availableActions, setAvailableActions] = useState([]);
   const [search, setSearch] = useState('');
   const [selectedAction, setSelectedAction] = useState('all');
-  const [loading, setLoading] = useState(false);
 
-  const loadLogs = useCallback(async () => {
-    if (!currentUser || currentUser.role !== 'superadmin') return;
-    try {
-      setLoading(true);
+  const {
+    data: auditData = { logs: [], total: 0, totalPages: 1, availableActions: [] },
+    isLoading: loading,
+    isError,
+    error,
+    refetch: loadLogs,
+  } = useQuery({
+    queryKey: ['admin', 'audit-logs', page, search, selectedAction],
+    queryFn: async () => {
       const params = new URLSearchParams({
         page: String(page),
         limit: '25',
@@ -1089,23 +1164,17 @@ function AuditLogsViewer({ toast }) {
       if (selectedAction !== 'all') params.append('action', selectedAction);
 
       const res = await apiFetch(`/api/audit-logs?${params.toString()}`);
-      if (res.ok) {
-        const data = await res.json();
-        setLogs(data.logs || []);
-        setTotal(data.total || 0);
-        setTotalPages(data.totalPages || 1);
-        if (data.availableActions) setAvailableActions(data.availableActions);
-      }
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  }, [apiFetch, currentUser, page, search, selectedAction]);
+      if (!res.ok) throw new Error('Failed to fetch audit telemetry');
+      return res.json();
+    },
+    enabled: !!currentUser && currentUser.role === 'superadmin',
+    placeholderData: (prev) => prev,
+  });
 
-  useEffect(() => {
-    loadLogs();
-  }, [loadLogs]);
+  const logs = auditData.logs || [];
+  const total = auditData.total || 0;
+  const totalPages = auditData.totalPages || 1;
+  const availableActions = auditData.availableActions || [];
 
   // Export CSV
   const handleExportCSV = () => {
@@ -1157,7 +1226,16 @@ function AuditLogsViewer({ toast }) {
       </div>
 
       {/* Table */}
-      <div style={{ background: 'rgba(30, 41, 59, 0.7)', borderRadius: '12px', border: '1px solid rgba(255, 255, 255, 0.08)', overflowX: 'auto', marginBottom: '16px' }}>
+      {isError ? (
+        <CyberErrorState message={error?.message || 'Failed to load audit telemetry'} onRetry={loadLogs} />
+      ) : (loading && logs.length === 0) ? (
+        <SkeletonTable
+          rows={8}
+          cols={7}
+          headers={['Log ID', 'Timestamp', 'User / Coordinator', 'Assigned Event', 'Action', 'Description', 'IP']}
+        />
+      ) : (
+        <div style={{ background: 'rgba(30, 41, 59, 0.7)', borderRadius: '12px', border: '1px solid rgba(255, 255, 255, 0.08)', overflowX: 'auto', marginBottom: '16px' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.85rem' }}>
           <thead>
             <tr style={{ background: '#0f172a', color: '#94a3b8', borderBottom: '1px solid rgba(255, 255, 255, 0.1)' }}>
@@ -1208,7 +1286,8 @@ function AuditLogsViewer({ toast }) {
             )}
           </tbody>
         </table>
-      </div>
+        </div>
+      )}
 
       {/* Pagination */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: '#94a3b8', fontSize: '0.85rem' }}>
@@ -1589,8 +1668,6 @@ export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState('overview');
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [toastMsg, setToastMsg] = useState('');
-  const [stats, setStats] = useState(null);
-
   // Authentication Guard
   useEffect(() => {
     if (!currentUser) {
@@ -1600,23 +1677,20 @@ export default function AdminDashboard() {
     }
   }, [currentUser, navigate]);
 
-  // Load Overview Stats
-  const loadStats = useCallback(async () => {
-    if (!currentUser || currentUser.role !== 'superadmin') return;
-    try {
+  const {
+    data: stats,
+    isLoading: statsLoading,
+    isError: statsError,
+    refetch: loadStats,
+  } = useQuery({
+    queryKey: ['admin', 'stats'],
+    queryFn: async () => {
       const res = await apiFetch('/api/overview/stats');
-      if (res.ok) {
-        const data = await res.json();
-        setStats(data);
-      }
-    } catch (err) {
-      console.error(err);
-    }
-  }, [apiFetch, currentUser]);
-
-  useEffect(() => {
-    loadStats();
-  }, [loadStats]);
+      if (!res.ok) throw new Error('Failed to load overview telemetry');
+      return res.json();
+    },
+    enabled: !!currentUser && currentUser.role === 'superadmin',
+  });
 
   const showToast = (msg) => {
     setToastMsg(msg);
@@ -1722,7 +1796,15 @@ export default function AdminDashboard() {
         </div>
 
         <div className="admin-sections" style={{ padding: '24px' }}>
-          {activeTab === 'overview' && <OverviewPanel stats={stats} onSelectTab={setActiveTab} />}
+          {activeTab === 'overview' && (
+            <OverviewPanel
+              stats={stats}
+              loading={statsLoading}
+              isError={statsError}
+              onRetry={loadStats}
+              onSelectTab={setActiveTab}
+            />
+          )}
           {activeTab === 'approvals' && <ResultApprovalManager toast={showToast} onRefreshStats={loadStats} />}
           {activeTab === 'coordinators' && <CoordinatorManager toast={showToast} onRefreshStats={loadStats} />}
           {activeTab === 'allteams' && <AllTeamsViewer toast={showToast} />}

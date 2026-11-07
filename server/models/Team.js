@@ -37,4 +37,7 @@ const teamSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now },
 });
 
+teamSchema.index({ eventName: 1, totalScore: -1 });
+teamSchema.index({ eventId: 1, totalScore: -1 });
+
 export const Team = mongoose.model('Team', teamSchema);

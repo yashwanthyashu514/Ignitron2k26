@@ -51,5 +51,7 @@ const auditLogSchema = new mongoose.Schema({
   },
 });
 
+auditLogSchema.index({ coordinatorId: 1, timestamp: -1 });
+
 export const AuditLog = mongoose.model('AuditLog', auditLogSchema);
 

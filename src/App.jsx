@@ -1,6 +1,8 @@
+import { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AppProvider } from './context/AppContext';
 import Navbar from './components/Navbar';
+import CyberLoader from './components/CyberLoader';
 import Home from './pages/Home';
 import Events from './pages/Events';
 import Scoreboard from './pages/Scoreboard';
@@ -22,6 +24,26 @@ function PublicLayout({ children }) {
 }
 
 export default function App() {
+  const [initialLoading, setInitialLoading] = useState(true);
+
+  useEffect(() => {
+    // Initial boot sequence for telemetry and asset hydration
+    const timer = setTimeout(() => {
+      setInitialLoading(false);
+    }, 600);
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (initialLoading) {
+    return (
+      <CyberLoader
+        fullScreen
+        text="ESTABLISHING IGNITRON 2K26 UPLINK..."
+        subtext="GM University Central Operations Telemetry"
+      />
+    );
+  }
+
   return (
     <AppProvider>
       <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>

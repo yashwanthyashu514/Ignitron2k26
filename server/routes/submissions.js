@@ -18,7 +18,7 @@ router.get('/', async (req, res) => {
       const escaped = (req.user.assignedEvent || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
       filter.eventName = new RegExp(`^${escaped}$`, 'i');
     }
-    const subs = await ScoreSubmission.find(filter).sort({ submittedAt: -1 });
+    const subs = await ScoreSubmission.find(filter).sort({ submittedAt: -1 }).lean();
     res.json(subs);
   } catch (err) {
     res.status(500).json({ error: err.message });

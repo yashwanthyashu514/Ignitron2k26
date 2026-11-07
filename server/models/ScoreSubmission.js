@@ -59,5 +59,8 @@ const scoreSubmissionSchema = new mongoose.Schema({
   }],
 });
 
+scoreSubmissionSchema.index({ eventName: 1, status: 1 });
+scoreSubmissionSchema.index({ submittedAt: -1 });
+
 export const ScoreSubmission = mongoose.model('ScoreSubmission', scoreSubmissionSchema);
 

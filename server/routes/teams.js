@@ -72,7 +72,7 @@ router.get('/', async (req, res) => {
         : { ...filter, ...searchClause };
     }
 
-    const teams = await Team.find(filter).sort({ totalScore: -1, createdAt: 1 });
+    const teams = await Team.find(filter).sort({ totalScore: -1, createdAt: 1 }).lean();
     res.json(teams);
   } catch (err) {
     res.status(500).json({ error: err.message });

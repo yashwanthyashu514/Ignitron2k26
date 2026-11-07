@@ -55,5 +55,8 @@ const userSchema = new mongoose.Schema({
   },
 });
 
+userSchema.index({ role: 1, createdAt: -1 });
+userSchema.index({ assignedEvent: 1 });
+
 export const User = mongoose.model('User', userSchema);
 

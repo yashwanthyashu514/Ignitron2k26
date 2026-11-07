@@ -35,6 +35,7 @@ import {
   CheckCircle2,
 } from 'lucide-react';
 import { generateCoordinatorReportPDF } from '../utils/pdfGenerator';
+import { SkeletonCards, SkeletonTable, CyberErrorState } from '../components/CyberSkeleton';
 
 export default function CoordinatorDashboard() {
   const { currentUser, adminLogout, apiFetch } = useApp();
@@ -47,6 +48,7 @@ export default function CoordinatorDashboard() {
   const [activityLogs, setActivityLogs] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(null);
   const [toastMessage, setToastMessage] = useState('');
 
   // Modals state for Team Registration
@@ -90,21 +92,25 @@ export default function CoordinatorDashboard() {
     setTimeout(() => setToastMessage(''), 3500);
   };
 
-  // Load event details, teams, submission status, and logs
+  // Load event details, teams, submission status, and logs concurrently in parallel
   const loadDashboardData = useCallback(async () => {
     if (!assignedEvent) return;
     try {
       setLoading(true);
+      setLoadError(null);
 
-      // 1. Fetch Event details & criteria
-      const evRes = await apiFetch(`/api/events/${encodeURIComponent(assignedEvent)}`);
+      const [evRes, teamsRes, subRes, logsRes] = await Promise.all([
+        apiFetch(`/api/events/${encodeURIComponent(assignedEvent)}`),
+        apiFetch(`/api/teams?event=${encodeURIComponent(assignedEvent)}`),
+        apiFetch(`/api/submissions`),
+        apiFetch(`/api/audit-logs/my-logs`),
+      ]);
+
       if (evRes.ok) {
         const ev = await evRes.json();
         setEventData(ev);
       }
 
-      // 2. Fetch Teams for this event
-      const teamsRes = await apiFetch(`/api/teams?event=${encodeURIComponent(assignedEvent)}`);
       if (teamsRes.ok) {
         const tms = await teamsRes.json();
         setTeams(tms);
@@ -124,22 +130,19 @@ export default function CoordinatorDashboard() {
         setTeamJudgesState(initialJudges);
       }
 
-      // 3. Fetch Submission status
-      const subRes = await apiFetch(`/api/submissions`);
       if (subRes.ok) {
         const subs = await subRes.json();
         const evSub = subs.find(s => s.eventName === assignedEvent);
         setSubmission(evSub || null);
       }
 
-      // 4. Fetch Coordinator's Own Activity Logs
-      const logsRes = await apiFetch(`/api/audit-logs/my-logs`);
       if (logsRes.ok) {
         const logs = await logsRes.json();
         setActivityLogs(logs);
       }
     } catch (err) {
       console.error('Failed to load coordinator data:', err);
+      setLoadError(err.message || 'Failed to fetch coordinator telemetry');
     } finally {
       setLoading(false);
     }
@@ -961,7 +964,11 @@ export default function CoordinatorDashboard() {
             </div>
 
             {/* Team Cards Grid */}
-            {filteredTeams.length === 0 ? (
+            {loadError ? (
+              <CyberErrorState message={loadError} onRetry={loadDashboardData} />
+            ) : loading ? (
+              <SkeletonCards count={6} />
+            ) : filteredTeams.length === 0 ? (
               <div style={{
                 textAlign: 'center',
                 padding: '80px 24px',
@@ -1410,7 +1417,15 @@ export default function CoordinatorDashboard() {
             )}
 
             {/* Score Cards for all teams */}
-            {teams.length === 0 ? (
+            {loadError ? (
+              <CyberErrorState message={loadError} onRetry={loadDashboardData} />
+            ) : loading ? (
+              <SkeletonTable
+                rows={6}
+                cols={6}
+                headers={['Rank & Delegation', 'College', 'Stage Criteria', 'Judges', 'Total Score', 'Save Action']}
+              />
+            ) : teams.length === 0 ? (
               <div style={{ textAlign: 'center', padding: '60px 20px', background: 'rgba(15, 23, 42, 0.5)', borderRadius: '16px' }}>
                 <Users size={44} color="#64748b" style={{ margin: '0 auto 12px auto' }} />
                 <h3 style={{ color: '#cbd5e1' }}>No Teams Registered</h3>
@@ -1733,7 +1748,15 @@ export default function CoordinatorDashboard() {
             <h3 style={{ fontFamily: "'Oxanium', sans-serif", fontSize: '1.3rem', color: '#f8fafc', marginBottom: '20px' }}>
               Your Activity History & Action Log
             </h3>
-            {activityLogs.length === 0 ? (
+            {loadError ? (
+              <CyberErrorState message={loadError} onRetry={loadDashboardData} />
+            ) : loading ? (
+              <SkeletonTable
+                rows={5}
+                cols={3}
+                headers={['Action', 'Telemetry Description', 'Recorded Timestamp']}
+              />
+            ) : activityLogs.length === 0 ? (
               <p style={{ color: '#94a3b8' }}>No recorded activities yet.</p>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
