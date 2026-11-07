@@ -1,28 +1,54 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import EventCard from '../components/EventCard';
 import Countdown from '../components/Countdown';
 import Hero3D from '../components/Hero3D';
 import Gallery from '../components/Gallery';
-import IgnitronIntro from '../components/IgnitronIntro';
-import { ChevronDown, Zap, Images, UserPlus, Play } from 'lucide-react';
+import IntroLoader from '../components/IntroLoader';
+import { ChevronDown, Zap, Images, UserPlus, Sparkles } from 'lucide-react';
 
 export default function Home() {
   const { events } = useApp();
+  const navigate = useNavigate();
   const [activeDay, setActiveDay] = useState('All');
   const [showIntro, setShowIntro] = useState(() => {
-    // Show intro on first visit in session
-    return !sessionStorage.getItem('ignitron_intro_seen');
+    try {
+      return !sessionStorage.getItem('ignitron_intro_seen');
+    } catch {
+      return true;
+    }
   });
+
+  const galleryImages = [
+    '/2k24 (1).jpg',
+    '/2k25 (2).jpg',
+    '/2k24 (3).jpg',
+    '/2k25 (4).jpg',
+    '/2k24 (5).jpg',
+    '/2k25 (6).jpg',
+    '/2k24 (2).jpg',
+  ];
 
   const filteredEvents = activeDay === 'All' ? events : events.filter(e => e.day === activeDay);
 
   return (
     <div className="home-page">
-      {/* National Level Tech Fest Interactive Particle Introduction */}
+      {/* Kinetic Typography & Particle Intro Loader */}
       {showIntro && (
-        <IgnitronIntro onEnter={() => setShowIntro(false)} forceShow={showIntro} />
+        <IntroLoader
+          ready={true}
+          images={galleryImages}
+          onFinish={() => {
+            setShowIntro(false);
+            try {
+              sessionStorage.setItem('ignitron_intro_seen', 'true');
+            } catch {}
+          }}
+          onRegister={() => {
+            navigate('/events');
+          }}
+        />
       )}
 
       {/* Hero Section */}
@@ -41,19 +67,9 @@ export default function Home() {
         <div className="hero-split-container">
           {/* LEFT — IGNITRON 2K26 Title & Hero Content */}
           <div className="hero-content hero-content--left">
-            <div className="hero-badge-group" style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
-              <div className="hero-badge">
-                <Zap size={14} />
-                NATIONAL LEVEL TECH FEST
-              </div>
-              <button
-                type="button"
-                onClick={() => setShowIntro(true)}
-                className="btn-replay-intro"
-                title="Replay Cinematic Cyber Intro"
-              >
-                <Play size={12} /> Replay Intro
-              </button>
+            <div className="hero-badge">
+              <Zap size={14} />
+              NATIONAL LEVEL TECH FEST
             </div>
             <h1 className="hero-title">
               <img
@@ -79,6 +95,15 @@ export default function Home() {
                 <UserPlus size={18} />
                 Register Now
               </Link>
+              <button
+                type="button"
+                onClick={() => setShowIntro(true)}
+                className="btn-replay-intro"
+                title="Replay kinetic typography and particle intro"
+              >
+                <Sparkles size={14} />
+                Intro
+              </button>
             </div>
           </div>
 

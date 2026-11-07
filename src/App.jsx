@@ -24,22 +24,31 @@ function PublicLayout({ children }) {
 }
 
 export default function App() {
-  const [initialLoading, setInitialLoading] = useState(true);
+  const [initialLoading, setInitialLoading] = useState(() => {
+    // Only show the system boot loader on direct portal routes (/admin, /coordinator)
+    // The public site directly renders the cinematic IntroExperience on Home!
+    if (typeof window !== 'undefined') {
+      const path = window.location.pathname;
+      return path.startsWith('/admin') || path.startsWith('/coordinator');
+    }
+    return false;
+  });
 
   useEffect(() => {
-    // Initial boot sequence for telemetry and asset hydration
-    const timer = setTimeout(() => {
-      setInitialLoading(false);
-    }, 600);
-    return () => clearTimeout(timer);
-  }, []);
+    if (initialLoading) {
+      const timer = setTimeout(() => {
+        setInitialLoading(false);
+      }, 550);
+      return () => clearTimeout(timer);
+    }
+  }, [initialLoading]);
 
   if (initialLoading) {
     return (
       <CyberLoader
         fullScreen
-        text="ESTABLISHING IGNITRON 2K26 UPLINK..."
-        subtext="GM University Central Operations Telemetry"
+        text="ESTABLISHING SECURE PORTAL UPLINK..."
+        subtext="Ignitron 2K26 · GM University Central Operations"
       />
     );
   }
