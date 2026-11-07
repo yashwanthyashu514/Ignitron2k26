@@ -11,7 +11,7 @@ useGLTF.preload('/models/MeshEntity.glb');
  */
 function EnergyParticles({ isMobile = false }) {
   const particlesRef = useRef();
-  const count = 75;
+  const count = isMobile ? 45 : 65;
 
   const { positions, colors } = useMemo(() => {
     const positions = new Float32Array(count * 3);
@@ -21,13 +21,10 @@ function EnergyParticles({ isMobile = false }) {
     const emeraldColor = new THREE.Color('#00E676');
     const whiteColor = new THREE.Color('#F8FAFC');
 
-    const baseR = isMobile ? 1.65 : 1.4;
-    const spreadR = isMobile ? 0.75 : 0.65;
-
     for (let i = 0; i < count; i++) {
       const theta = Math.random() * Math.PI * 2;
       const phi = Math.acos(2 * Math.random() - 1);
-      const r = baseR + Math.random() * spreadR;
+      const r = 1.15 + Math.random() * 0.45;
 
       positions[i * 3]     = r * Math.sin(phi) * Math.cos(theta);
       positions[i * 3 + 1] = r * Math.cos(phi);
@@ -39,7 +36,7 @@ function EnergyParticles({ isMobile = false }) {
       colors[i * 3 + 2] = color.b;
     }
     return { positions, colors };
-  }, []);
+  }, [count]);
 
   useFrame((state) => {
     if (particlesRef.current) {
@@ -66,10 +63,10 @@ function EnergyParticles({ isMobile = false }) {
         />
       </bufferGeometry>
       <pointsMaterial
-        size={0.065}
+        size={isMobile ? 0.055 : 0.065}
         vertexColors
         transparent
-        opacity={0.86}
+        opacity={0.82}
         sizeAttenuation
         depthWrite={false}
         blending={THREE.AdditiveBlending}
@@ -79,37 +76,73 @@ function EnergyParticles({ isMobile = false }) {
 }
 
 /**
- * Animated cyber glow ring under the model
+ * Holographic anti-gravity levitation pedestal
+ * Refined thin concentric energy rings - never cuts off or slices the avatar
  */
-function CyberRing({ isMobile = false }) {
-  const ringRef = useRef();
+function CyberPedestal() {
+  const ring1Ref = useRef();
+  const ring2Ref = useRef();
+  const ring3Ref = useRef();
 
   useFrame((state) => {
-    if (ringRef.current) {
-      const t = state.clock.elapsedTime;
-      ringRef.current.rotation.z = t * 0.35;
-      const pulse = 0.65 + Math.sin(t * 1.6) * 0.35;
-      ringRef.current.material.opacity = pulse * 0.45;
+    const t = state.clock.elapsedTime;
+    if (ring1Ref.current) {
+      ring1Ref.current.rotation.z = t * 0.28;
+      ring1Ref.current.material.opacity = 0.35 + Math.sin(t * 1.8) * 0.15;
+    }
+    if (ring2Ref.current) {
+      ring2Ref.current.rotation.z = -t * 0.38;
+      ring2Ref.current.material.opacity = 0.45 + Math.cos(t * 2.2) * 0.15;
+    }
+    if (ring3Ref.current) {
+      ring3Ref.current.rotation.z = t * 0.16;
+      ring3Ref.current.material.opacity = 0.25 + Math.sin(t * 1.2) * 0.1;
     }
   });
 
+  const posY = -1.22;
+
   return (
-    <mesh
-      ref={ringRef}
-      rotation={[-Math.PI / 2, 0, 0]}
-      position={[0, isMobile ? -1.35 : -1.18, 0]}
-      scale={isMobile ? 1.2 : 1}
-    >
-      <ringGeometry args={[0.92, 1.4, 64]} />
-      <meshBasicMaterial
-        color="#00E676"
-        transparent
-        opacity={0.35}
-        side={THREE.DoubleSide}
-        blending={THREE.AdditiveBlending}
-        depthWrite={false}
-      />
-    </mesh>
+    <group position={[0, posY, 0]}>
+      {/* Inner cyan pulse ring - thin & crisp */}
+      <mesh ref={ring1Ref} rotation={[-Math.PI / 2, 0, 0]}>
+        <ringGeometry args={[0.55, 0.58, 64]} />
+        <meshBasicMaterial
+          color="#00D9FF"
+          transparent
+          opacity={0.4}
+          side={THREE.DoubleSide}
+          blending={THREE.AdditiveBlending}
+          depthWrite={false}
+        />
+      </mesh>
+
+      {/* Mid emerald energy ring - thin & radiant */}
+      <mesh ref={ring2Ref} rotation={[-Math.PI / 2, 0, 0]}>
+        <ringGeometry args={[0.82, 0.86, 64]} />
+        <meshBasicMaterial
+          color="#00E676"
+          transparent
+          opacity={0.5}
+          side={THREE.DoubleSide}
+          blending={THREE.AdditiveBlending}
+          depthWrite={false}
+        />
+      </mesh>
+
+      {/* Outer ambient beacon ring - graceful boundary */}
+      <mesh ref={ring3Ref} rotation={[-Math.PI / 2, 0, 0]}>
+        <ringGeometry args={[1.06, 1.09, 64]} />
+        <meshBasicMaterial
+          color="#00D9FF"
+          transparent
+          opacity={0.28}
+          side={THREE.DoubleSide}
+          blending={THREE.AdditiveBlending}
+          depthWrite={false}
+        />
+      </mesh>
+    </group>
   );
 }
 
@@ -179,7 +212,7 @@ export default function IgnitronModel({
         }
 
         if (Math.abs(velocityRef.current.x) > 0.0001) {
-          dragRotRef.current.x = Math.max(-0.6, Math.min(0.6, dragRotRef.current.x + velocityRef.current.x));
+          dragRotRef.current.x = Math.max(-0.32, Math.min(0.32, dragRotRef.current.x + velocityRef.current.x));
           velocityRef.current.x *= 0.93;
         } else {
           // Slowly ease vertical pitch back towards neutral
@@ -188,16 +221,16 @@ export default function IgnitronModel({
       }
     }
 
-    // 2. Cursor/touch position tilt
-    targetTiltY.current = (mouseX ?? 0) * 0.35;
-    targetTiltX.current = -(mouseY ?? 0) * 0.22;
+    // 2. Cursor/touch position tilt (gentle to keep all parts fully within view)
+    targetTiltY.current = (mouseX ?? 0) * 0.28;
+    targetTiltX.current = -(mouseY ?? 0) * 0.16;
 
     const lerpSpeed = 0.06;
     currentTiltY.current += (targetTiltY.current - currentTiltY.current) * lerpSpeed;
     currentTiltX.current += (targetTiltX.current - currentTiltX.current) * lerpSpeed;
 
     // 3. Hover scale boost
-    const baseTargetScale = isHovered ? 1.06 : 1.0;
+    const baseTargetScale = isHovered ? 1.04 : 1.0;
     currentScale.current += (baseTargetScale - currentScale.current) * 0.06;
 
     if (groupRef.current) {
@@ -206,11 +239,11 @@ export default function IgnitronModel({
 
       // Full 360-degree rotation + tilt + subtle breathing wave
       groupRef.current.rotation.y = dragY + currentTiltY.current;
-      groupRef.current.rotation.x = dragX + currentTiltX.current + Math.sin(t * 0.4) * 0.04;
+      groupRef.current.rotation.x = dragX + currentTiltX.current + Math.sin(t * 0.4) * 0.03;
 
       // Mouse distance subtle scale
       const mouseDist = Math.sqrt((mouseX ?? 0) ** 2 + (mouseY ?? 0) ** 2);
-      const proximityScale = 1 + mouseDist * 0.03;
+      const proximityScale = 1 + mouseDist * 0.02;
       groupRef.current.scale.setScalar(currentScale.current * proximityScale);
 
       // Fast cached emissive pulse without tree traversal
@@ -224,24 +257,24 @@ export default function IgnitronModel({
 
   return (
     <group ref={groupRef}>
-      {/* Silky smooth floating animation */}
+      {/* Silky smooth floating animation with safe margins (never clips head or feet) */}
       <Float
-        speed={2.2}
-        rotationIntensity={0.25}
-        floatIntensity={0.5}
-        floatingRange={[-0.08, 0.08]}
+        speed={1.8}
+        rotationIntensity={0.15}
+        floatIntensity={0.3}
+        floatingRange={[-0.04, 0.04]}
       >
-        {/* Center and scale to medium-large size (scaled up on mobile) */}
+        {/* Center and scale to balanced size with ample headroom & footroom */}
         <Center>
-          <Resize scale={isMobile ? 3.15 : 2.55}>
+          <Resize scale={isMobile ? 2.45 : 2.5}>
             <primitive object={clonedScene} />
           </Resize>
         </Center>
       </Float>
 
-      {/* Orbiting particles and cyber ring */}
+      {/* Orbiting particles and refined holographic pedestal */}
       <EnergyParticles isMobile={isMobile} />
-      <CyberRing isMobile={isMobile} />
+      <CyberPedestal />
     </group>
   );
 }

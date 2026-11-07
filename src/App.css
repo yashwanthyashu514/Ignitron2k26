@@ -992,24 +992,28 @@ img {
     gap: 16px;
   }
 
-  /* Prominent 3D model at top of mobile screen */
+  /* Polished, unclipped 3D avatar viewport for mobile */
   .hero-3d-wrapper {
-    height: 390px;
-    min-height: 350px;
+    height: 420px;
+    min-height: 380px;
+    overflow: visible;
   }
 
   .hero-3d-container {
-    min-height: 350px;
+    min-height: 380px;
+    overflow: visible;
   }
 
   .hero-3d-glow {
-    width: 310px;
-    height: 310px;
+    width: 290px;
+    height: 290px;
+    filter: blur(48px);
   }
 
   .hero-3d-glow--active {
-    width: 360px;
-    height: 360px;
+    width: 340px;
+    height: 340px;
+    filter: blur(52px);
   }
 
   .hero-content--left .hero-title-img {
