@@ -5,16 +5,26 @@ import EventCard from '../components/EventCard';
 import Countdown from '../components/Countdown';
 import Hero3D from '../components/Hero3D';
 import Gallery from '../components/Gallery';
-import { ChevronDown, Zap, Images, UserPlus } from 'lucide-react';
+import IgnitronIntro from '../components/IgnitronIntro';
+import { ChevronDown, Zap, Images, UserPlus, Play } from 'lucide-react';
 
 export default function Home() {
   const { events } = useApp();
   const [activeDay, setActiveDay] = useState('All');
+  const [showIntro, setShowIntro] = useState(() => {
+    // Show intro on first visit in session
+    return !sessionStorage.getItem('ignitron_intro_seen');
+  });
 
   const filteredEvents = activeDay === 'All' ? events : events.filter(e => e.day === activeDay);
 
   return (
     <div className="home-page">
+      {/* National Level Tech Fest Interactive Particle Introduction */}
+      {showIntro && (
+        <IgnitronIntro onEnter={() => setShowIntro(false)} forceShow={showIntro} />
+      )}
+
       {/* Hero Section */}
       <section className="hero-section hero-section--split">
         <div className="hero-particles">
@@ -31,9 +41,19 @@ export default function Home() {
         <div className="hero-split-container">
           {/* LEFT — IGNITRON 2K26 Title & Hero Content */}
           <div className="hero-content hero-content--left">
-            <div className="hero-badge">
-              <Zap size={14} />
-              NATIONAL LEVEL TECH FEST
+            <div className="hero-badge-group" style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+              <div className="hero-badge">
+                <Zap size={14} />
+                NATIONAL LEVEL TECH FEST
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowIntro(true)}
+                className="btn-replay-intro"
+                title="Replay Cinematic Cyber Intro"
+              >
+                <Play size={12} /> Replay Intro
+              </button>
             </div>
             <h1 className="hero-title">
               <img
