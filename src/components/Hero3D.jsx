@@ -321,7 +321,7 @@ export default function Hero3D() {
       <WebGLErrorBoundary>
         <Canvas
           key={`${contextKey}-${isMobile ? 'm' : 'd'}`}
-          camera={{ position: [0, 0.04, isMobile ? 4.35 : 4.2], fov: isMobile ? 46 : 45, near: 0.1, far: 100 }}
+          camera={{ position: [0, 0.02, isMobile ? 3.85 : 4.2], fov: 45, near: 0.1, far: 100 }}
           dpr={[1, 1.5]}
           gl={{
             antialias: true,

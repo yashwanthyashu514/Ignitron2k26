@@ -79,7 +79,7 @@ function EnergyParticles({ isMobile = false }) {
  * Holographic anti-gravity levitation pedestal
  * Refined thin concentric energy rings - never cuts off or slices the avatar
  */
-function CyberPedestal() {
+function CyberPedestal({ isMobile = false }) {
   const ring1Ref = useRef();
   const ring2Ref = useRef();
   const ring3Ref = useRef();
@@ -100,17 +100,17 @@ function CyberPedestal() {
     }
   });
 
-  const posY = -1.22;
+  const posY = isMobile ? -1.35 : -1.25;
 
   return (
     <group position={[0, posY, 0]}>
       {/* Inner cyan pulse ring - thin & crisp */}
       <mesh ref={ring1Ref} rotation={[-Math.PI / 2, 0, 0]}>
-        <ringGeometry args={[0.55, 0.58, 64]} />
+        <ringGeometry args={[0.60, 0.63, 64]} />
         <meshBasicMaterial
           color="#00D9FF"
           transparent
-          opacity={0.4}
+          opacity={0.42}
           side={THREE.DoubleSide}
           blending={THREE.AdditiveBlending}
           depthWrite={false}
@@ -119,11 +119,11 @@ function CyberPedestal() {
 
       {/* Mid emerald energy ring - thin & radiant */}
       <mesh ref={ring2Ref} rotation={[-Math.PI / 2, 0, 0]}>
-        <ringGeometry args={[0.82, 0.86, 64]} />
+        <ringGeometry args={[0.88, 0.92, 64]} />
         <meshBasicMaterial
           color="#00E676"
           transparent
-          opacity={0.5}
+          opacity={0.52}
           side={THREE.DoubleSide}
           blending={THREE.AdditiveBlending}
           depthWrite={false}
@@ -132,11 +132,11 @@ function CyberPedestal() {
 
       {/* Outer ambient beacon ring - graceful boundary */}
       <mesh ref={ring3Ref} rotation={[-Math.PI / 2, 0, 0]}>
-        <ringGeometry args={[1.06, 1.09, 64]} />
+        <ringGeometry args={[1.12, 1.15, 64]} />
         <meshBasicMaterial
           color="#00D9FF"
           transparent
-          opacity={0.28}
+          opacity={0.3}
           side={THREE.DoubleSide}
           blending={THREE.AdditiveBlending}
           depthWrite={false}
@@ -259,14 +259,14 @@ export default function IgnitronModel({
     <group ref={groupRef}>
       {/* Silky smooth floating animation with safe margins (never clips head or feet) */}
       <Float
-        speed={1.8}
+        speed={1.6}
         rotationIntensity={0.15}
-        floatIntensity={0.3}
-        floatingRange={[-0.04, 0.04]}
+        floatIntensity={0.25}
+        floatingRange={[-0.03, 0.03]}
       >
-        {/* Center and scale to balanced size with ample headroom & footroom */}
+        {/* Center and scale to bold prominent size with clean headroom & footroom */}
         <Center>
-          <Resize scale={isMobile ? 2.45 : 2.5}>
+          <Resize scale={isMobile ? 2.85 : 2.6}>
             <primitive object={clonedScene} />
           </Resize>
         </Center>
@@ -274,7 +274,7 @@ export default function IgnitronModel({
 
       {/* Orbiting particles and refined holographic pedestal */}
       <EnergyParticles isMobile={isMobile} />
-      <CyberPedestal />
+      <CyberPedestal isMobile={isMobile} />
     </group>
   );
 }
