@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, Download, Calendar, Users, Home, Clock, Trophy } from 'lucide-react';
+import { Menu, X, Download, Calendar, Users, Home, Clock } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 
 export default function Navbar() {
@@ -21,7 +21,6 @@ export default function Navbar() {
     { to: '/', label: 'Home', icon: <Home size={16} /> },
     { to: '/events', label: 'Events', icon: <Calendar size={16} /> },
     { to: '/timeline', label: 'Timeline', icon: <Clock size={16} /> },
-    { to: '/scoreboard', label: 'Scoreboard', icon: <Trophy size={16} /> },
     { to: '/team', label: 'Team', icon: <Users size={16} /> },
   ];
 
