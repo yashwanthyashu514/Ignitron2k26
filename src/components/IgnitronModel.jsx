@@ -9,7 +9,7 @@ useGLTF.preload('/models/MeshEntity.glb');
 /**
  * Floating futuristic energy particles orbiting the 3D model
  */
-function EnergyParticles() {
+function EnergyParticles({ isMobile = false }) {
   const particlesRef = useRef();
   const count = 75;
 
@@ -21,10 +21,13 @@ function EnergyParticles() {
     const emeraldColor = new THREE.Color('#00E676');
     const whiteColor = new THREE.Color('#F8FAFC');
 
+    const baseR = isMobile ? 1.65 : 1.4;
+    const spreadR = isMobile ? 0.75 : 0.65;
+
     for (let i = 0; i < count; i++) {
       const theta = Math.random() * Math.PI * 2;
       const phi = Math.acos(2 * Math.random() - 1);
-      const r = 1.4 + Math.random() * 0.65;
+      const r = baseR + Math.random() * spreadR;
 
       positions[i * 3]     = r * Math.sin(phi) * Math.cos(theta);
       positions[i * 3 + 1] = r * Math.cos(phi);
@@ -78,7 +81,7 @@ function EnergyParticles() {
 /**
  * Animated cyber glow ring under the model
  */
-function CyberRing() {
+function CyberRing({ isMobile = false }) {
   const ringRef = useRef();
 
   useFrame((state) => {
@@ -91,7 +94,12 @@ function CyberRing() {
   });
 
   return (
-    <mesh ref={ringRef} rotation={[-Math.PI / 2, 0, 0]} position={[0, -1.18, 0]}>
+    <mesh
+      ref={ringRef}
+      rotation={[-Math.PI / 2, 0, 0]}
+      position={[0, isMobile ? -1.35 : -1.18, 0]}
+      scale={isMobile ? 1.2 : 1}
+    >
       <ringGeometry args={[0.92, 1.4, 64]} />
       <meshBasicMaterial
         color="#00E676"
@@ -107,7 +115,7 @@ function CyberRing() {
 
 /**
  * Main 3D Model:
- * - Perfectly centered and sized to clean medium dimensions (scale 2.55)
+ * - Perfectly centered and sized to clean medium dimensions (scale 2.55, scaled to 3.15 on mobile)
  * - Smooth lerped rotation based on cursor
  * - Silky floating motion
  * - Hover & proximity response
@@ -119,6 +127,7 @@ export default function IgnitronModel({
   dragRotRef,
   velocityRef,
   isDraggingRef,
+  isMobile = false,
 }) {
   const groupRef = useRef();
   const { scene } = useGLTF('/models/MeshEntity.glb');
@@ -222,17 +231,17 @@ export default function IgnitronModel({
         floatIntensity={0.5}
         floatingRange={[-0.08, 0.08]}
       >
-        {/* Center and scale to medium-large size */}
+        {/* Center and scale to medium-large size (scaled up on mobile) */}
         <Center>
-          <Resize scale={2.55}>
+          <Resize scale={isMobile ? 3.15 : 2.55}>
             <primitive object={clonedScene} />
           </Resize>
         </Center>
       </Float>
 
       {/* Orbiting particles and cyber ring */}
-      <EnergyParticles />
-      <CyberRing />
+      <EnergyParticles isMobile={isMobile} />
+      <CyberRing isMobile={isMobile} />
     </group>
   );
 }

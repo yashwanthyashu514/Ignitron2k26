@@ -107,6 +107,15 @@ export default function Hero3D() {
   const [isHovered, setIsHovered] = useState(false);
   const [contextKey, setContextKey] = useState(0);
   const [hasInteracted, setHasInteracted] = useState(false);
+  const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth <= 768);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // Rotation and momentum physics refs passed to IgnitronModel (no React re-renders during 60fps drag)
   const dragRotRef = useRef({ x: 0, y: 0 });
@@ -311,8 +320,8 @@ export default function Hero3D() {
 
       <WebGLErrorBoundary>
         <Canvas
-          key={contextKey}
-          camera={{ position: [0, 0, 4.2], fov: 45, near: 0.1, far: 100 }}
+          key={`${contextKey}-${isMobile ? 'm' : 'd'}`}
+          camera={{ position: [0, 0, isMobile ? 3.7 : 4.2], fov: 45, near: 0.1, far: 100 }}
           dpr={[1, 1.5]}
           gl={{
             antialias: true,
@@ -352,6 +361,7 @@ export default function Hero3D() {
               dragRotRef={dragRotRef}
               velocityRef={velocityRef}
               isDraggingRef={isDraggingRef}
+              isMobile={isMobile}
             />
           </Suspense>
         </Canvas>
