@@ -100,7 +100,7 @@ function CyberPedestal({ isMobile = false }) {
     }
   });
 
-  const posY = isMobile ? -1.35 : -1.25;
+  const posY = isMobile ? -1.38 : -1.25;
 
   return (
     <group position={[0, posY, 0]}>
@@ -266,7 +266,7 @@ export default function IgnitronModel({
       >
         {/* Center and scale to bold prominent size with clean headroom & footroom */}
         <Center>
-          <Resize scale={isMobile ? 2.85 : 2.6}>
+          <Resize scale={isMobile ? 3.0 : 2.6}>
             <primitive object={clonedScene} />
           </Resize>
         </Center>

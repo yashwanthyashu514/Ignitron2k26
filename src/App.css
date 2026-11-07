@@ -985,44 +985,50 @@ img {
 
 @media (max-width: 640px) {
   .hero-section--split {
-    padding: 20px 16px 50px;
+    padding: 10px 16px 36px;
+    min-height: auto;
+    justify-content: flex-start;
   }
 
   .hero-split-container {
-    gap: 16px;
+    gap: 4px;
+    padding-top: 0;
   }
 
-  /* Polished, unclipped 3D avatar viewport for mobile */
+  /* Compact wrapper with tight surrounding gaps on mobile */
   .hero-3d-wrapper {
-    height: 420px;
-    min-height: 380px;
+    height: 340px;
+    min-height: 300px;
+    margin-bottom: -10px;
     overflow: visible;
   }
 
   .hero-3d-container {
-    min-height: 380px;
+    min-height: 300px;
     overflow: visible;
   }
 
   .hero-3d-glow {
-    width: 290px;
-    height: 290px;
-    filter: blur(48px);
+    width: 260px;
+    height: 260px;
+    filter: blur(40px);
   }
 
   .hero-3d-glow--active {
-    width: 340px;
-    height: 340px;
-    filter: blur(52px);
+    width: 300px;
+    height: 300px;
+    filter: blur(44px);
   }
 
   .hero-content--left .hero-title-img {
-    max-width: 340px;
-    width: 88vw;
+    max-width: 330px;
+    width: 86vw;
+    margin-bottom: 12px;
   }
 
   .hero-content--left .hero-badge {
-    margin-bottom: 16px;
+    margin-top: 0;
+    margin-bottom: 10px;
   }
 }
 
