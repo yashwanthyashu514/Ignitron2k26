@@ -100,7 +100,7 @@ function CyberPedestal({ isMobile = false }) {
     }
   });
 
-  const posY = isMobile ? -1.34 : -1.25;
+  const posY = isMobile ? -1.32 : -1.25;
 
   return (
     <group position={[0, posY, 0]}>
@@ -260,18 +260,18 @@ export default function IgnitronModel({
   });
 
   return (
-    <group>
+    <group position={[0, isMobile ? 0.08 : 0, 0]}>
       {/* Silky smooth floating animation with safe margins (never clips head or feet) */}
       <group ref={groupRef}>
         <Float
           speed={1.6}
           rotationIntensity={0.12}
-          floatIntensity={0.2}
-          floatingRange={[-0.025, 0.025]}
+          floatIntensity={0.18}
+          floatingRange={[-0.02, 0.02]}
         >
           {/* Scaled to bold prominent size with generous headroom and footroom */}
           <Center>
-            <Resize scale={isMobile ? 2.65 : 2.6}>
+            <Resize scale={isMobile ? 2.85 : 2.6}>
               <primitive object={clonedScene} />
             </Resize>
           </Center>

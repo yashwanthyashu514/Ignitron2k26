@@ -154,7 +154,7 @@ export default function Home() {
       {/* 3D Motion Gallery */}
       <Gallery />
 
-      <div style={{ textAlign: 'center', marginBottom: '4rem', marginTop: '-15px' }}>
+      <div className="home-gallery-btn-wrapper">
         <Link to="/gallery" className="btn-hero-secondary" style={{ display: 'inline-flex' }}>
           <Images size={16} /> View Full Photo Gallery
         </Link>

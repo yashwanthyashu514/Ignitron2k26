@@ -325,8 +325,8 @@ export default function Hero3D() {
           key={`${contextKey}-${isMobile ? 'm' : 'd'}`}
           frameloop={isInView ? 'always' : 'demand'}
           camera={{
-            position: [0, 0.04, isMobile ? 3.9 : 4.2],
-            fov: isMobile ? 50 : 45,
+            position: [0, 0.02, isMobile ? 3.65 : 4.2],
+            fov: isMobile ? 47 : 45,
             near: 0.1,
             far: 100,
           }}
