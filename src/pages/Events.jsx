@@ -9,7 +9,7 @@ export default function Events() {
   const [activeDay, setActiveDay] = useState('All');
 
   const filtered = events.filter(e => {
-    const matchDay = activeDay === 'All' || e.day === activeDay;
+    const matchDay = activeDay === 'All' || e.day === activeDay || (e.day && e.day.includes(activeDay));
     const matchSearch = e.name.toLowerCase().includes(search.toLowerCase()) ||
       (e.description || '').toLowerCase().includes(search.toLowerCase());
     return matchDay && matchSearch;

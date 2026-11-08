@@ -30,7 +30,9 @@ export default function Home() {
     '/2k24 (2).jpg',
   ];
 
-  const filteredEvents = activeDay === 'All' ? events : events.filter(e => e.day === activeDay);
+  const filteredEvents = activeDay === 'All'
+    ? events
+    : events.filter(e => e.day === activeDay || (e.day && e.day.includes(activeDay)));
 
   return (
     <div className="home-page">
