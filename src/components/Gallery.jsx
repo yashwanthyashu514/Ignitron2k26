@@ -50,19 +50,39 @@ const galleryData = [
 export default function Gallery() {
   const [active, setActive] = useState(0);
   const [paused, setPaused] = useState(false);
+  const [isInView, setIsInView] = useState(true);
+  const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth <= 640);
+  const sectionRef = React.useRef(null);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 640);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // Pause carousel animation when scrolled out of view to save mobile GPU/CPU
+  useEffect(() => {
+    const el = sectionRef.current;
+    if (!el || !('IntersectionObserver' in window)) return;
+    const observer = new IntersectionObserver(([entry]) => {
+      setIsInView(entry.isIntersecting);
+    }, { rootMargin: '100px' });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
 
   /*
-    Automatic movement
+    Automatic movement (only when visible)
   */
   useEffect(() => {
-    if (paused) return;
+    if (paused || !isInView) return;
 
     const timer = setInterval(() => {
       setActive((prev) => (prev + 1) % galleryData.length);
-    }, 2400);
+    }, 2800);
 
     return () => clearInterval(timer);
-  }, [paused]);
+  }, [paused, isInView]);
 
   /*
     Calculate card position relative
@@ -83,8 +103,11 @@ export default function Gallery() {
     return diff;
   };
 
+  const xSpacing = isMobile ? 180 : 310;
+
   return (
     <section
+      ref={sectionRef}
       className="gallery-section"
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
@@ -117,7 +140,7 @@ export default function Gallery() {
                   isCenter ? "gallery-card-active" : ""
                 }`}
                 animate={{
-                  x: position * 310,
+                  x: position * xSpacing,
                   scale:
                     position === 0
                       ? 1

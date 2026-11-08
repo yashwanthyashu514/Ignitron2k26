@@ -100,7 +100,7 @@ function CyberPedestal({ isMobile = false }) {
     }
   });
 
-  const posY = isMobile ? -1.38 : -1.25;
+  const posY = isMobile ? -1.34 : -1.25;
 
   return (
     <group position={[0, posY, 0]}>
@@ -156,6 +156,7 @@ function CyberPedestal({ isMobile = false }) {
 export default function IgnitronModel({
   mouseX,
   mouseY,
+  mouseRef,
   isHovered,
   dragRotRef,
   velocityRef,
@@ -212,7 +213,7 @@ export default function IgnitronModel({
         }
 
         if (Math.abs(velocityRef.current.x) > 0.0001) {
-          dragRotRef.current.x = Math.max(-0.32, Math.min(0.32, dragRotRef.current.x + velocityRef.current.x));
+          dragRotRef.current.x = Math.max(-0.25, Math.min(0.25, dragRotRef.current.x + velocityRef.current.x));
           velocityRef.current.x *= 0.93;
         } else {
           // Slowly ease vertical pitch back towards neutral
@@ -222,8 +223,11 @@ export default function IgnitronModel({
     }
 
     // 2. Cursor/touch position tilt (gentle to keep all parts fully within view)
-    targetTiltY.current = (mouseX ?? 0) * 0.28;
-    targetTiltX.current = -(mouseY ?? 0) * 0.16;
+    const mx = mouseRef ? mouseRef.current.x : (mouseX ?? 0);
+    const my = mouseRef ? mouseRef.current.y : (mouseY ?? 0);
+
+    targetTiltY.current = mx * 0.22;
+    targetTiltX.current = -my * 0.12;
 
     const lerpSpeed = 0.06;
     currentTiltY.current += (targetTiltY.current - currentTiltY.current) * lerpSpeed;
@@ -239,10 +243,10 @@ export default function IgnitronModel({
 
       // Full 360-degree rotation + tilt + subtle breathing wave
       groupRef.current.rotation.y = dragY + currentTiltY.current;
-      groupRef.current.rotation.x = dragX + currentTiltX.current + Math.sin(t * 0.4) * 0.03;
+      groupRef.current.rotation.x = dragX + currentTiltX.current + Math.sin(t * 0.4) * 0.025;
 
       // Mouse distance subtle scale
-      const mouseDist = Math.sqrt((mouseX ?? 0) ** 2 + (mouseY ?? 0) ** 2);
+      const mouseDist = Math.sqrt(mx ** 2 + my ** 2);
       const proximityScale = 1 + mouseDist * 0.02;
       groupRef.current.scale.setScalar(currentScale.current * proximityScale);
 
@@ -256,24 +260,28 @@ export default function IgnitronModel({
   });
 
   return (
-    <group ref={groupRef}>
+    <group>
       {/* Silky smooth floating animation with safe margins (never clips head or feet) */}
-      <Float
-        speed={1.6}
-        rotationIntensity={0.15}
-        floatIntensity={0.25}
-        floatingRange={[-0.03, 0.03]}
-      >
-        {/* Center and scale to bold prominent size with clean headroom & footroom */}
-        <Center>
-          <Resize scale={isMobile ? 3.0 : 2.6}>
-            <primitive object={clonedScene} />
-          </Resize>
-        </Center>
-      </Float>
+      <group ref={groupRef}>
+        <Float
+          speed={1.6}
+          rotationIntensity={0.12}
+          floatIntensity={0.2}
+          floatingRange={[-0.025, 0.025]}
+        >
+          {/* Scaled to bold prominent size with generous headroom and footroom */}
+          <Center>
+            <Resize scale={isMobile ? 2.65 : 2.6}>
+              <primitive object={clonedScene} />
+            </Resize>
+          </Center>
+        </Float>
 
-      {/* Orbiting particles and refined holographic pedestal */}
-      <EnergyParticles isMobile={isMobile} />
+        {/* Orbiting particles */}
+        <EnergyParticles isMobile={isMobile} />
+      </group>
+
+      {/* Futuristic anti-gravity levitation rings stay stable on the floor plane */}
       <CyberPedestal isMobile={isMobile} />
     </group>
   );

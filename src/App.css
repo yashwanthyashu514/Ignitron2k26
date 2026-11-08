@@ -79,6 +79,7 @@
 
 html {
   scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
 }
 
 /* ===== POSTER BACKGROUND & SPACE ATMOSPHERE ===== */
@@ -92,6 +93,7 @@ body {
   -moz-osx-font-smoothing: grayscale;
   position: relative;
   min-height: 100vh;
+  overscroll-behavior-y: none;
 }
 
 /* Fixed Clean Cosmic Aurora Background */
@@ -985,50 +987,239 @@ img {
 
 @media (max-width: 640px) {
   .hero-section--split {
-    padding: 10px 16px 36px;
+    padding: 8px 16px 28px;
     min-height: auto;
     justify-content: flex-start;
   }
 
   .hero-split-container {
-    gap: 4px;
+    gap: 0;
     padding-top: 0;
   }
 
-  /* Compact wrapper with tight surrounding gaps on mobile */
+  /* Generous 380px height gives the 3D model full headroom and footroom - zero clipping! */
   .hero-3d-wrapper {
-    height: 340px;
-    min-height: 300px;
-    margin-bottom: -10px;
+    height: 380px;
+    min-height: 360px;
+    margin-bottom: -15px;
     overflow: visible;
   }
 
   .hero-3d-container {
-    min-height: 300px;
+    min-height: 360px;
     overflow: visible;
   }
 
   .hero-3d-glow {
-    width: 260px;
-    height: 260px;
+    width: 280px;
+    height: 280px;
     filter: blur(40px);
   }
 
   .hero-3d-glow--active {
-    width: 300px;
-    height: 300px;
+    width: 320px;
+    height: 320px;
     filter: blur(44px);
-  }
-
-  .hero-content--left .hero-title-img {
-    max-width: 330px;
-    width: 86vw;
-    margin-bottom: 12px;
   }
 
   .hero-content--left .hero-badge {
     margin-top: 0;
+    margin-bottom: 8px;
+    padding: 5px 14px;
+    font-size: 0.72rem;
+  }
+
+  .hero-content--left .hero-title-img {
+    max-width: 310px;
+    width: 84vw;
+    margin-bottom: 8px;
+  }
+
+  .hero-content--left .hero-subtitle {
+    font-size: 0.94rem;
+    line-height: 1.45;
+    margin-bottom: 4px;
+    padding: 0 10px;
+  }
+
+  .hero-content--left .hero-tagline {
+    font-size: 0.78rem;
+    letter-spacing: 0.04em;
+    margin-bottom: 18px;
+  }
+
+  .hero-content--left .hero-cta-group {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+    width: 100%;
+    padding: 0 8px;
+  }
+
+  .hero-content--left .btn-hero-primary,
+  .hero-content--left .btn-hero-register {
+    padding: 12px 20px;
+    font-size: 0.9rem;
+    border-radius: 12px;
+  }
+
+  .hero-content--left .btn-replay-intro {
+    padding: 10px 14px;
+    font-size: 0.8rem;
+  }
+
+  /* Mobile Polish: Section Headers */
+  .section-header {
+    margin-bottom: 22px;
+    padding: 0 12px;
+  }
+
+  .section-badge {
+    padding: 5px 14px;
+    font-size: 0.7rem;
+    margin-bottom: 8px;
+  }
+
+  .section-title {
+    font-size: 1.85rem;
+    margin-bottom: 6px;
+    letter-spacing: -0.5px;
+  }
+
+  .section-sub {
+    font-size: 0.86rem;
+    line-height: 1.45;
+  }
+
+  /* Mobile Polish: Countdown Section — Sleek 4-Column Glass Row */
+  .countdown-section {
+    padding: 32px 14px 40px;
+  }
+
+  .countdown-grid {
+    display: grid !important;
+    grid-template-columns: repeat(4, 1fr) !important;
+    gap: 8px !important;
+    max-width: 380px !important;
+    margin: 0 auto 16px !important;
+    width: 100%;
+  }
+
+  .countdown-card {
+    width: 100% !important;
+    height: 84px !important;
+    padding: 6px 2px !important;
+    border-radius: 14px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    backdrop-filter: blur(8px) !important;
+    -webkit-backdrop-filter: blur(8px) !important;
+    transform: translateZ(0);
+    will-change: transform;
+  }
+
+  .countdown-number {
+    font-size: 1.85rem !important;
+    line-height: 1 !important;
+  }
+
+  .countdown-label {
+    font-size: 0.6rem !important;
+    letter-spacing: 0.08em !important;
+    margin-top: 4px !important;
+  }
+
+  .countdown-date-display {
+    font-size: 0.84rem;
+    line-height: 1.4;
+    padding: 0 10px;
+  }
+
+  /* Mobile Polish: Events Section & Cards */
+  .events-section {
+    padding: 36px 14px 48px;
+  }
+
+  .day-filter {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 22px;
+    flex-wrap: wrap;
+  }
+
+  .day-filter-btn {
+    padding: 8px 16px;
+    font-size: 0.8rem;
+    border-radius: 20px;
+  }
+
+  .events-grid {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 16px !important;
+    width: 100% !important;
+  }
+
+  .event-card {
+    padding: 20px 16px !important;
+    border-radius: 18px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    backdrop-filter: blur(8px) !important;
+    -webkit-backdrop-filter: blur(8px) !important;
+    transform: translateZ(0);
+    will-change: transform;
+  }
+
+  .event-card-header {
     margin-bottom: 10px;
+    gap: 6px;
+  }
+
+  .event-category-badge,
+  .event-day-badge {
+    padding: 3px 9px;
+    font-size: 0.68rem;
+  }
+
+  .event-card-title {
+    font-size: 1.25rem !important;
+    margin-bottom: 8px !important;
+  }
+
+  .event-card-desc {
+    font-size: 0.86rem !important;
+    line-height: 1.5 !important;
+    margin-bottom: 14px !important;
+  }
+
+  .event-card-meta {
+    gap: 10px;
+    margin-bottom: 16px;
+    padding-top: 10px;
+  }
+
+  .meta-item {
+    font-size: 0.78rem;
+  }
+
+  .event-card-actions {
+    display: flex;
+    gap: 8px;
+    width: 100%;
+  }
+
+  .btn-rulebook,
+  .btn-register-event {
+    flex: 1;
+    justify-content: center;
+    padding: 10px 12px;
+    font-size: 0.82rem;
   }
 }
 

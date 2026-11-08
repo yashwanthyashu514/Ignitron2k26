@@ -288,6 +288,7 @@
   .gallery-stage {
     height: 360px;
     perspective: 900px;
+    overflow: hidden;
   }
 
   .gallery-card {

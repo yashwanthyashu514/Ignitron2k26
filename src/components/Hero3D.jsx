@@ -103,10 +103,11 @@ class WebGLErrorBoundary extends Component {
  */
 export default function Hero3D() {
   const containerRef = useRef(null);
-  const [mouse, setMouse] = useState({ x: 0, y: 0 });
+  const mouseRef = useRef({ x: 0, y: 0 });
   const [isHovered, setIsHovered] = useState(false);
   const [contextKey, setContextKey] = useState(0);
   const [hasInteracted, setHasInteracted] = useState(false);
+  const [isInView, setIsInView] = useState(true);
   const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth <= 768);
 
   useEffect(() => {
@@ -115,6 +116,21 @@ export default function Hero3D() {
     };
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // Pause WebGL render loop when Hero is scrolled out of viewport (frees 100% GPU for smooth scrolling)
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container || !('IntersectionObserver' in window)) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setIsInView(entry.isIntersecting);
+      },
+      { rootMargin: '120px' }
+    );
+    observer.observe(container);
+    return () => observer.disconnect();
   }, []);
 
   // Rotation and momentum physics refs passed to IgnitronModel (no React re-renders during 60fps drag)
@@ -133,7 +149,7 @@ export default function Hero3D() {
     let isTouchActive = false;
     let isHorizontalGesture = false;
 
-    // --- MOBILE TOUCH LISTENERS ---
+    // --- MOBILE TOUCH LISTENERS (Native Scroll Pass-Through & Buttery Smooth 360 Rotation) ---
     const handleTouchStart = (e) => {
       if (e.touches.length === 1) {
         const touch = e.touches[0];
@@ -143,10 +159,8 @@ export default function Hero3D() {
         startY = touch.clientY;
         isTouchActive = true;
         isHorizontalGesture = false;
-        isDraggingRef.current = true;
+        isDraggingRef.current = false;
         velocityRef.current = { x: 0, y: 0 };
-        setIsHovered(true);
-        setHasInteracted(true);
       }
     };
 
@@ -161,47 +175,49 @@ export default function Hero3D() {
       const totalX = Math.abs(touch.clientX - startX);
       const totalY = Math.abs(touch.clientY - startY);
 
-      // If user drags horizontally or with rotation intent, prioritize 3D model rotation
-      if (!isHorizontalGesture && totalX > 6 && totalX >= totalY) {
-        isHorizontalGesture = true;
-      }
-
-      if (isHorizontalGesture && e.cancelable) {
-        e.preventDefault();
-      }
-
-      // Rotate model smoothly (360 degrees horizontal, bounded vertical tilt)
-      const sensitivity = 0.009;
-      dragRotRef.current.y += dx * sensitivity;
-      dragRotRef.current.x = Math.max(-0.6, Math.min(0.6, dragRotRef.current.x + dy * (sensitivity * 0.7)));
-
-      velocityRef.current = {
-        y: dx * sensitivity,
-        x: dy * (sensitivity * 0.7),
-      };
-
-      // Also update normalized tilt relative to center
-      const rect = container.getBoundingClientRect();
-      const centerX = rect.left + rect.width / 2;
-      const centerY = rect.top + rect.height / 2;
-      const nx = Math.max(-1.5, Math.min(1.5, (touch.clientX - centerX) / (rect.width / 2)));
-      const ny = Math.max(-1.5, Math.min(1.5, (touch.clientY - centerY) / (rect.height / 2)));
-      setMouse({ x: nx, y: ny });
-    };
-
-    const handleTouchEnd = () => {
-      if (isTouchActive) {
+      // If user touch intent is vertical scroll, immediately release touch control to browser
+      if (!isHorizontalGesture && totalY > 7 && totalY > totalX) {
         isTouchActive = false;
         isDraggingRef.current = false;
         setIsHovered(false);
+        return; // Native buttery smooth browser scrolling!
       }
+
+      // If user drags horizontally on model, activate 3D model rotation
+      if (!isHorizontalGesture && totalX > 8 && totalX >= totalY) {
+        isHorizontalGesture = true;
+        isDraggingRef.current = true;
+        setIsHovered(true);
+        setHasInteracted(true);
+      }
+
+      if (isHorizontalGesture) {
+        if (e.cancelable) {
+          e.preventDefault();
+        }
+
+        const sensitivity = 0.009;
+        dragRotRef.current.y += dx * sensitivity;
+        dragRotRef.current.x = Math.max(-0.25, Math.min(0.25, dragRotRef.current.x + dy * (sensitivity * 0.5)));
+
+        velocityRef.current = {
+          y: dx * sensitivity,
+          x: dy * (sensitivity * 0.5),
+        };
+      }
+    };
+
+    const handleTouchEnd = () => {
+      isTouchActive = false;
+      isDraggingRef.current = false;
+      setIsHovered(false);
     };
 
     // --- DESKTOP MOUSE / POINTER DRAG ---
     let isPointerDown = false;
 
     const handlePointerDown = (e) => {
-      if (e.pointerType === 'touch') return; // Handled cleanly by touch listeners
+      if (e.pointerType === 'touch') return;
       isPointerDown = true;
       isDraggingRef.current = true;
       lastX = e.clientX;
@@ -224,7 +240,7 @@ export default function Hero3D() {
 
         const sensitivity = 0.008;
         dragRotRef.current.y += dx * sensitivity;
-        dragRotRef.current.x = Math.max(-0.6, Math.min(0.6, dragRotRef.current.x + dy * (sensitivity * 0.7)));
+        dragRotRef.current.x = Math.max(-0.35, Math.min(0.35, dragRotRef.current.x + dy * (sensitivity * 0.7)));
 
         velocityRef.current = {
           y: dx * sensitivity,
@@ -244,15 +260,15 @@ export default function Hero3D() {
       }
     };
 
-    // Global desktop mouse move (for gentle hover parallax tilt)
+    // Global desktop mouse move (for gentle hover parallax tilt, zero re-renders)
     const handleGlobalMouseMove = (e) => {
+      if (isMobile) return;
       const rect = container.getBoundingClientRect();
       const centerX = rect.left + rect.width / 2;
       const centerY = rect.top + rect.height / 2;
 
-      const x = Math.max(-1.5, Math.min(1.5, (e.clientX - centerX) / (rect.width / 2)));
-      const y = Math.max(-1.5, Math.min(1.5, (e.clientY - centerY) / (rect.height / 2)));
-      setMouse({ x, y });
+      mouseRef.current.x = Math.max(-1.5, Math.min(1.5, (e.clientX - centerX) / (rect.width / 2)));
+      mouseRef.current.y = Math.max(-1.5, Math.min(1.5, (e.clientY - centerY) / (rect.height / 2)));
 
       const hovered =
         e.clientX >= rect.left &&
@@ -260,18 +276,6 @@ export default function Hero3D() {
         e.clientY >= rect.top &&
         e.clientY <= rect.bottom;
       if (!isPointerDown) setIsHovered(hovered);
-    };
-
-    // Global touch position tilt tracking
-    const handleGlobalTouchMove = (e) => {
-      if (isTouchActive || e.touches.length === 0) return;
-      const touch = e.touches[0];
-      const rect = container.getBoundingClientRect();
-      const centerX = rect.left + rect.width / 2;
-      const centerY = rect.top + rect.height / 2;
-      const nx = Math.max(-1.5, Math.min(1.5, (touch.clientX - centerX) / (rect.width / 2)));
-      const ny = Math.max(-1.5, Math.min(1.5, (touch.clientY - centerY) / (rect.height / 2)));
-      setMouse({ x: nx, y: ny });
     };
 
     container.addEventListener('touchstart', handleTouchStart, { passive: true });
@@ -285,7 +289,6 @@ export default function Hero3D() {
     container.addEventListener('pointercancel', handlePointerUp);
 
     window.addEventListener('mousemove', handleGlobalMouseMove, { passive: true });
-    window.addEventListener('touchmove', handleGlobalTouchMove, { passive: true });
 
     return () => {
       container.removeEventListener('touchstart', handleTouchStart);
@@ -299,9 +302,8 @@ export default function Hero3D() {
       container.removeEventListener('pointercancel', handlePointerUp);
 
       window.removeEventListener('mousemove', handleGlobalMouseMove);
-      window.removeEventListener('touchmove', handleGlobalTouchMove);
     };
-  }, []);
+  }, [isMobile]);
 
   return (
     <div
@@ -321,13 +323,19 @@ export default function Hero3D() {
       <WebGLErrorBoundary>
         <Canvas
           key={`${contextKey}-${isMobile ? 'm' : 'd'}`}
-          camera={{ position: [0, 0.02, isMobile ? 3.55 : 4.2], fov: isMobile ? 48 : 45, near: 0.1, far: 100 }}
-          dpr={[1, 1.5]}
+          frameloop={isInView ? 'always' : 'demand'}
+          camera={{
+            position: [0, 0.04, isMobile ? 3.9 : 4.2],
+            fov: isMobile ? 50 : 45,
+            near: 0.1,
+            far: 100,
+          }}
+          dpr={[1, isMobile ? 1.5 : 2]}
           gl={{
             antialias: true,
             alpha: true,
             preserveDrawingBuffer: false,
-            failIfMajorPerformanceCaveat: false,
+            powerPreference: 'high-performance',
           }}
           onCreated={({ gl }) => {
             // Prevent browser from discarding context on heavy HMR reload
@@ -355,8 +363,7 @@ export default function Hero3D() {
 
           <Suspense fallback={<ModelLoader />}>
             <IgnitronModel
-              mouseX={mouse.x}
-              mouseY={mouse.y}
+              mouseRef={mouseRef}
               isHovered={isHovered}
               dragRotRef={dragRotRef}
               velocityRef={velocityRef}
