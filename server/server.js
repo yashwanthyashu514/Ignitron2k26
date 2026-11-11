@@ -255,8 +255,12 @@ async function seedInitialData() {
 
 // ── Start ─────────────────────────────────────────────────────────────────────
 async function startServer() {
-  await connectDB();
-  await seedInitialData();
+  try {
+    await connectDB();
+    await seedInitialData();
+  } catch (err) {
+    console.warn('[MongoDB] Initial connection delayed or offline. Server will start and reconnect on demand:', err.message);
+  }
 
   app.listen(PORT, () => {
     console.log(`\n╔════════════════════════════════════════╗`);

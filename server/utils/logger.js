@@ -33,3 +33,5 @@ export async function logActivity({
   }
 }
 
+export const logAudit = logActivity;
+
