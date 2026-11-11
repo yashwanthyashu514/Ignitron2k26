@@ -1,32 +1,71 @@
 import { useState } from 'react';
 import { X, ChevronLeft, ChevronRight, Images, ZoomIn } from 'lucide-react';
 
+const PHOTOS_2K25 = [
+  "DSC_0006.JPG",
+  "DSC_0020.JPG",
+  "DSC_0121.JPG",
+  "DSC_0633.JPG",
+  "DSC_0634.JPG",
+  "DSC_0646.JPG",
+  "DSC_0713.JPG",
+  "DSC_0718.JPG",
+  "DSC_0753.JPG",
+  "DSC_4105.JPG",
+  "IMG_1490.JPG",
+  "IMG_1519.JPG",
+  "IMG_1537.JPG",
+  "IMG_1539.JPG",
+  "IMG_2169.JPG",
+  "IMG_2262.JPG",
+  "IMG_2358.JPG",
+  "IMG_2374.JPG",
+  "IMG_2377.JPG",
+  "IMG_2667.JPG",
+  "IMG_3695.JPG",
+  "IMG_3906.JPG",
+  "IMG_3909.JPG",
+  "IMG_3922.JPG",
+  "IMG_3935.JPG",
+  "IMG_3957.JPG",
+  "IMG_3959.JPG",
+  "IMG_3960.JPG",
+  "IMG_3961.JPG",
+  "IMG_4011.JPG",
+  "IMG_4046.JPG",
+  "IMG_4443.JPG",
+  "IMG_4479.JPG",
+  "IMG_4510.JPG",
+  "IMG_4557.JPG",
+  "IMG_4559.JPG",
+  "IMG_4690.JPG",
+  "IMG_4774.JPG",
+  "IMG_4863.JPG",
+  "IMG_4871.JPG",
+  "IMG_7322.JPG",
+  "IMG_7536.JPG",
+  "IMG_7538.JPG",
+  "IMG_7581.JPG",
+  "Copy of IMG_2692.JPG",
+  "IMG-20251204-WA0048.jpg",
+  "IMG-20251204-WA0059.jpg",
+  "Screenshot 2026-11-11 092940.png",
+  "WhatsApp Image 2026-11-07 at 5.54.31 PM.jpeg",
+  "WhatsApp Image 2026-11-07 at 5.55.25 PM.jpeg",
+  "WhatsApp Image 2026-11-07 at 5.56.03 PM.jpeg",
+  "WhatsApp Image 2026-11-07 at 5.56.27 PM.jpeg",
+  "WhatsApp Image 2026-11-07 at 5.59.04 PM.jpeg"
+];
+
 const GALLERY_DATA = [
-  {
-    year: '2K24',
-    label: 'Ignitron 2K24',
-    color: '#00E676',
-    photos: [
-      { src: '/2k24 (1).jpg', caption: 'Ignitron 2K24 Highlights' },
-      { src: '/2k24 (2).jpg', caption: 'Ignitron 2K24 Highlights' },
-      { src: '/2k24 (3).jpg', caption: 'Ignitron 2K24 Highlights' },
-      { src: '/2k24 (4).jpg', caption: 'Ignitron 2K24 Highlights' },
-      { src: '/2k24 (5).jpg', caption: 'Ignitron 2K24 Highlights' },
-      { src: '/2k24 (6).jpg', caption: 'Ignitron 2K24 Highlights' },
-    ],
-  },
   {
     year: '2K25',
     label: 'Ignitron 2K25',
     color: '#00D9FF',
-    photos: [
-      { src: '/2k25 (1).jpg', caption: 'Ignitron 2K25 Highlights' },
-      { src: '/2k25 (2).jpg', caption: 'Ignitron 2K25 Highlights' },
-      { src: '/2k25 (3).jpg', caption: 'Ignitron 2K25 Highlights' },
-      { src: '/2k25 (4).jpg', caption: 'Ignitron 2K25 Highlights' },
-      { src: '/2k25 (5).jpg', caption: 'Ignitron 2K25 Highlights' },
-      { src: '/2k25 (6).jpg', caption: 'Ignitron 2K25 Highlights' },
-    ],
+    photos: PHOTOS_2K25.map((file, idx) => ({
+      src: `/gallery/2k25/${encodeURI(file)}`,
+      caption: `Ignitron 2K25 Highlights #${idx + 1}`,
+    })),
   },
 ];
 
@@ -78,7 +117,7 @@ export default function Gallery() {
             <Images size={14} /> Memories
           </div>
           <h1 className="page-hero-title">Gallery</h1>
-          <p className="page-hero-sub">Reliving the magic of past Ignitron editions</p>
+          <p className="page-hero-sub">Reliving the electric energy and memories of Ignitron 2K25</p>
         </div>
       </div>
 

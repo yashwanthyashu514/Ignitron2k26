@@ -32,7 +32,7 @@ export function AppProvider({ children }) {
     const raw = loadFromStorage('ignitron_events_v7', defaultEvents);
     return Array.isArray(raw) ? raw.map(({ prize, fee, price, ...rest }) => rest) : defaultEvents;
   });
-  const [teamMembers, setTeamMembersState] = useState(() => loadFromStorage('ignitron_team_v4', defaultTeamMembers));
+  const [teamMembers, setTeamMembersState] = useState(() => loadFromStorage('ignitron_team_v5', defaultTeamMembers));
   const [timeline, setTimelineState] = useState(() => loadFromStorage('ignitron_timeline_v5', defaultTimeline));
   const [scoreboard, setScoreboardState] = useState(() => loadFromStorage('ignitron_scoreboard', defaultScoreboard));
   const [countdown, setCountdownState] = useState(() => loadFromStorage('ignitron_countdown_v4', defaultCountdown));
@@ -95,7 +95,7 @@ export function AppProvider({ children }) {
   const setTeamMembers = useCallback((val) => {
     const updated = typeof val === 'function' ? val(teamMembers) : val;
     setTeamMembersState(updated);
-    saveToStorage('ignitron_team_v4', updated);
+    saveToStorage('ignitron_team_v5', updated);
   }, [teamMembers]);
 
   const setTimeline = useCallback((val) => {

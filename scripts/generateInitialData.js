@@ -116,3 +116,4 @@ ${scCode}
 
 fs.writeFileSync(initialDataPath, fullContent, 'utf8');
 console.log('Successfully updated src/data/initialData.js with 28 official events and timeline!');
+

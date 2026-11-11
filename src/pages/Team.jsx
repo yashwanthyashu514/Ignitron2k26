@@ -1,21 +1,20 @@
 import { useState } from 'react';
 import { useApp } from '../context/AppContext';
-import { Users, Star, Camera } from 'lucide-react';
+import { Users, Star } from 'lucide-react';
 
 const CATEGORIES = [
   { key: 'organizer', label: 'Organization', icon: Star, color: '#00E676' },
-  { key: 'core', label: 'Core', icon: Users, color: '#00D9FF' },
-  { key: 'media', label: 'Media', icon: Camera, color: '#F59E0B' },
+  { key: 'core', label: 'Core Team', icon: Users, color: '#00D9FF' },
 ];
 
 const DEFAULT_MEMBERS = {
   organizer: [
     {
       id: 'org1',
-      name: 'Dr. S. R. Shankapal',
+      name: 'Dr. H. R. Mahadevaswamy',
       role: 'Vice Chancellor',
       org: 'GM University',
-      photo: '/team/dr_s_r_shankapal.png',
+      photo: '/team/H R Mahadevaswamy.png',
     },
     {
       id: 'org2',
@@ -47,17 +46,14 @@ const DEFAULT_MEMBERS = {
     },
   ],
   core: [
-    { id: 'c1', name: 'Vikram Singh', role: 'Core Lead', photo: '' },
-    { id: 'c2', name: 'Ananya Rao', role: 'Core Member', photo: '' },
-    { id: 'c3', name: 'Karan Joshi', role: 'Core Member', photo: '' },
-    { id: 'c4', name: 'Divya Nair', role: 'Core Member', photo: '' },
-    { id: 'c5', name: 'Rohan Gupta', role: 'Core Member', photo: '' },
-  ],
-  media: [
-    { id: 'm1', name: 'Ishaan Kapoor', role: 'Media Head', photo: '' },
-    { id: 'm2', name: 'Meera Iyer', role: 'Photographer', photo: '' },
-    { id: 'm3', name: 'Aditya Kumar', role: 'Videographer', photo: '' },
-    { id: 'm4', name: 'Tanvi Shah', role: 'Social Media', photo: '' },
+    { id: 'core1', name: 'Nethrapal M Jali', role: 'Core Team', org: 'GM University', photo: '/team/nethrapal_m_jali_core1.png' },
+    { id: 'core2', name: 'Arjun Kerodi', role: 'Core Team', org: 'GM University', photo: '/team/arjun_kerodi_core2.png' },
+    { id: 'core3', name: 'Chidanand V', role: 'Core Team', org: 'GM University', photo: '/team/chidanand_v_core3.png' },
+    { id: 'core4', name: 'Abhishek B S', role: 'Core Team', org: 'GM University', photo: '/team/abhishek_bs_core4.png' },
+    { id: 'core5', name: 'Darshan R', role: 'Core Team', org: 'GM University', photo: '/team/Darshan_R_core5.jpeg' },
+    { id: 'core6', name: 'Yashwanth M', role: 'Core Team', org: 'GM University', photo: '/team/Yashwanth_M_core6.jpeg' },
+    { id: 'core7', name: 'Chetan Prakash Wardi', role: 'Core Team', org: 'GM University', photo: '/team/chetan_prakash_wardi_core7.png' },
+    { id: 'core8', name: 'Pavan B M', role: 'Core Team', org: 'GM University', photo: '/team/Pavan_B_M_core8.jpeg' },
   ],
 };
 
@@ -101,7 +97,7 @@ export default function Team() {
   const getMembers = (key) => {
     const rawCtx = contextByCategory[key] || (key === 'organizer' ? contextByCategory['organization'] : null) || [];
     const filteredCtx = rawCtx.filter(
-      m => !['Dr. Ramesh Kumar', 'Arjun Sharma', 'Priya Mehta', 'Rahul Verma'].includes(m.name)
+      m => !['Dr. Ramesh Kumar', 'Arjun Sharma', 'Priya Mehta', 'Rahul Verma', 'Dr. S. R. Shankapal'].includes(m.name)
     );
     return filteredCtx.length > 0 ? filteredCtx : DEFAULT_MEMBERS[key] || [];
   };

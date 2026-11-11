@@ -1551,6 +1551,27 @@ function TeamManager({ toast }) {
     setEditing(null);
   };
 
+  const startEdit = (m) => {
+    setForm({
+      name: m.name || '',
+      role: m.role || '',
+      category: m.category === 'core' ? 'core' : 'organizer',
+      org: m.org || '',
+      photo: m.photo || '',
+    });
+    setEditing(m.id);
+  };
+
+  const handleFileChange = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setForm(prev => ({ ...prev, photo: reader.result }));
+    };
+    reader.readAsDataURL(file);
+  };
+
   const handleSave = () => {
     if (!form.name) return;
     if (editing) {
@@ -1581,19 +1602,61 @@ function TeamManager({ toast }) {
           </div>
           <div className="form-group">
             <label className="form-label">Role</label>
-            <input className="form-input" value={form.role} onChange={e => setForm({ ...form, role: e.target.value })} placeholder="e.g. Vice Chancellor" />
+            <input className="form-input" value={form.role} onChange={e => setForm({ ...form, role: e.target.value })} placeholder="e.g. Vice Chancellor / Core Team" />
           </div>
           <div className="form-group">
             <label className="form-label">Category</label>
             <select className="form-input" value={form.category} onChange={e => setForm({ ...form, category: e.target.value })}>
               <option value="organizer">Organizer</option>
-              <option value="faculty">Faculty</option>
-              <option value="student">Student</option>
+              <option value="core">Core Member</option>
             </select>
           </div>
           <div className="form-group">
             <label className="form-label">Organization</label>
             <input className="form-input" value={form.org} onChange={e => setForm({ ...form, org: e.target.value })} placeholder="GM University" />
+          </div>
+          <div className="form-group" style={{ gridColumn: 'span 2' }}>
+            <label className="form-label">Photo / Image</label>
+            <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+              <input
+                className="form-input"
+                style={{ flex: 1, minWidth: '220px' }}
+                value={form.photo}
+                onChange={e => setForm({ ...form, photo: e.target.value })}
+                placeholder="Image path (/team/photo.png) or URL"
+              />
+              <label
+                htmlFor="team-photo-upload"
+                className="btn-admin-cancel"
+                style={{ cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '6px', margin: 0, padding: '8px 14px' }}
+              >
+                <Upload size={14} /> Upload Image
+              </label>
+              <input
+                id="team-photo-upload"
+                type="file"
+                accept="image/*"
+                onChange={handleFileChange}
+                style={{ display: 'none' }}
+              />
+            </div>
+            {form.photo && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '8px' }}>
+                <img
+                  src={form.photo}
+                  alt="Preview"
+                  style={{ width: '40px', height: '40px', borderRadius: '50%', objectFit: 'cover', border: '2px solid #00D9FF' }}
+                />
+                <span style={{ fontSize: '12px', color: '#94a3b8' }}>Image selected</span>
+                <button
+                  type="button"
+                  onClick={() => setForm(prev => ({ ...prev, photo: '' }))}
+                  style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', fontSize: '12px' }}
+                >
+                  Clear Image
+                </button>
+              </div>
+            )}
           </div>
         </div>
         <div style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
@@ -1604,16 +1667,32 @@ function TeamManager({ toast }) {
 
       <div className="admin-list">
         {teamMembers.map(m => (
-          <div className="admin-list-item" key={m.id}>
-            <div className="admin-list-info">
-              <div className="admin-list-name">{m.name}</div>
-              <div className="admin-list-meta">
-                <span>{m.role}</span>
-                <span>{m.category}</span>
+          <div className="admin-list-item" key={m.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              {m.photo ? (
+                <img
+                  src={m.photo}
+                  alt={m.name}
+                  style={{ width: '38px', height: '38px', borderRadius: '50%', objectFit: 'cover', border: '1px solid rgba(255,255,255,0.15)' }}
+                />
+              ) : (
+                <div style={{ width: '38px', height: '38px', borderRadius: '50%', background: 'rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: 600, color: '#38bdf8' }}>
+                  {(m.name || '').slice(0, 2).toUpperCase()}
+                </div>
+              )}
+              <div className="admin-list-info">
+                <div className="admin-list-name">{m.name}</div>
+                <div className="admin-list-meta">
+                  <span>{m.role}</span>
+                  <span style={{ textTransform: 'capitalize', color: m.category === 'core' ? '#38bdf8' : '#34d399' }}>
+                    {m.category === 'core' ? 'Core Member' : 'Organizer'}
+                  </span>
+                </div>
               </div>
             </div>
             <div className="admin-list-actions">
-              <button className="btn-delete" onClick={() => handleDelete(m.id)}><Trash2 size={15} /></button>
+              <button className="btn-edit" onClick={() => startEdit(m)} title="Edit Member"><Edit3 size={15} /></button>
+              <button className="btn-delete" onClick={() => handleDelete(m.id)} title="Delete Member"><Trash2 size={15} /></button>
             </div>
           </div>
         ))}

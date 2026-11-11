@@ -2,50 +2,15 @@ import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import "./Gallery.css";
 
-const galleryData = [
-  {
-    id: 1,
-    image: "/2k24 (1).jpg",
-    title: "Ignitron 2K24",
-    year: "2K24",
-  },
-  {
-    id: 2,
-    image: "/2k25 (2).jpg",
+const galleryData = Array.from({ length: 19 }, (_, i) => {
+  const num = String(i + 1).padStart(2, "0");
+  return {
+    id: i + 1,
+    image: `/gallery/${num}.JPG`,
     title: "Ignitron 2K25",
     year: "2K25",
-  },
-  {
-    id: 3,
-    image: "/2k24 (3).jpg",
-    title: "Ignitron 2K24",
-    year: "2K24",
-  },
-  {
-    id: 4,
-    image: "/2k25 (4).jpg",
-    title: "Ignitron 2K25",
-    year: "2K25",
-  },
-  {
-    id: 5,
-    image: "/2k24 (5).jpg",
-    title: "Ignitron 2K24",
-    year: "2K24",
-  },
-  {
-    id: 6,
-    image: "/2k25 (6).jpg",
-    title: "Ignitron 2K25",
-    year: "2K25",
-  },
-  {
-    id: 7,
-    image: "/2k24 (2).jpg",
-    title: "Ignitron 2K24",
-    year: "2K24",
-  },
-];
+  };
+});
 
 export default function Gallery() {
   const [active, setActive] = useState(0);
@@ -119,11 +84,11 @@ export default function Gallery() {
 
         <h2>
           Ignitron
-          <span> 2K24 &amp; 2K25</span>
+          <span> 2K25 Flashbacks</span>
         </h2>
 
         <p>
-          Reliving the electric energy, innovation and unforgettable moments from our previous editions.
+          Reliving the electric energy, innovation and unforgettable moments from Ignitron 2K25.
         </p>
       </div>
 

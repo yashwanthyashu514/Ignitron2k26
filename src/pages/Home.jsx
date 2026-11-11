@@ -21,13 +21,13 @@ export default function Home() {
   });
 
   const galleryImages = [
-    '/2k24 (1).jpg',
-    '/2k25 (2).jpg',
-    '/2k24 (3).jpg',
-    '/2k25 (4).jpg',
-    '/2k24 (5).jpg',
-    '/2k25 (6).jpg',
-    '/2k24 (2).jpg',
+    '/gallery/01.JPG',
+    '/gallery/02.JPG',
+    '/gallery/03.JPG',
+    '/gallery/04.JPG',
+    '/gallery/05.JPG',
+    '/gallery/06.JPG',
+    '/gallery/07.JPG',
   ];
 
   const filteredEvents = activeDay === 'All'

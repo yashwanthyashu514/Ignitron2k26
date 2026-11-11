@@ -412,3 +412,4 @@ updateDB().catch(err => {
   console.error('Error updating DB:', err);
   process.exit(1);
 });
+
