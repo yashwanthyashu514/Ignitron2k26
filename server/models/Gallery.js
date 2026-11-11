@@ -33,3 +33,4 @@ const gallerySchema = new mongoose.Schema({
 gallerySchema.index({ year: 1, order: 1 });
 
 export const Gallery = mongoose.model('Gallery', gallerySchema);
+

@@ -46,3 +46,4 @@ const teamMemberSchema = new mongoose.Schema({
 teamMemberSchema.index({ category: 1, order: 1 });
 
 export const TeamMember = mongoose.model('TeamMember', teamMemberSchema);
+

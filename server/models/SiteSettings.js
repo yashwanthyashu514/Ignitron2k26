@@ -26,3 +26,4 @@ const siteSettingsSchema = new mongoose.Schema({
 }, { timestamps: true });
 
 export const SiteSettings = mongoose.model('SiteSettings', siteSettingsSchema);
+

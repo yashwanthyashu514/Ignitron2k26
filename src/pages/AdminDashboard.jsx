@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Navigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useApp } from '../context/AppContext';
 import { SkeletonKPI, SkeletonTable, SkeletonCards, CyberErrorState } from '../components/CyberSkeleton';
@@ -2363,8 +2363,13 @@ function TimelineManager({ toast }) {
 // MAIN SUPER ADMIN DASHBOARD COMPONENT
 // ====================================================
 export default function AdminDashboard() {
-  const { currentUser, adminLogout, apiFetch } = useApp();
+  const { currentUser, authToken, adminLogout, apiFetch } = useApp();
   const navigate = useNavigate();
+
+  // Instant synchronous guard — completely blocks rendering if unauthenticated or not superadmin
+  if (!authToken || !currentUser || currentUser.role !== 'superadmin') {
+    return <Navigate to="/admin" replace />;
+  }
 
   const [activeTab, setActiveTab] = useState('overview');
   const [sidebarOpen, setSidebarOpen] = useState(false);

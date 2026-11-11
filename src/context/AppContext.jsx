@@ -43,10 +43,62 @@ export function AppProvider({ children }) {
   // Authentication State
   const [authToken, setAuthToken] = useState(() => localStorage.getItem('ignitron_token') || '');
   const [currentUser, setCurrentUser] = useState(() => loadFromStorage('ignitron_user', null));
+  const [authLoading, setAuthLoading] = useState(() => Boolean(localStorage.getItem('ignitron_token')));
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(() => {
     const token = localStorage.getItem('ignitron_token');
     return Boolean(token);
   });
+
+  // Verify stored token against backend /api/auth/me on startup
+  useEffect(() => {
+    const token = localStorage.getItem('ignitron_token');
+    if (!token) {
+      setAuthToken('');
+      setCurrentUser(null);
+      setIsAdminLoggedIn(false);
+      localStorage.removeItem('ignitron_user');
+      setAuthLoading(false);
+      return;
+    }
+
+    fetch('/api/auth/me', {
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+    })
+      .then(async (res) => {
+        if (!res.ok) {
+          // Token is expired, invalid or tampered with
+          setAuthToken('');
+          setCurrentUser(null);
+          setIsAdminLoggedIn(false);
+          localStorage.removeItem('ignitron_token');
+          localStorage.removeItem('ignitron_user');
+          sessionStorage.removeItem('ignitron_admin');
+        } else {
+          const data = await res.json();
+          if (data && data.user) {
+            setCurrentUser(data.user);
+            setIsAdminLoggedIn(true);
+            localStorage.setItem('ignitron_user', JSON.stringify(data.user));
+          }
+        }
+      })
+      .catch(() => {
+        const storedUser = loadFromStorage('ignitron_user', null);
+        if (!storedUser || !storedUser.role) {
+          setAuthToken('');
+          setCurrentUser(null);
+          setIsAdminLoggedIn(false);
+          localStorage.removeItem('ignitron_token');
+          localStorage.removeItem('ignitron_user');
+        }
+      })
+      .finally(() => {
+        setAuthLoading(false);
+      });
+  }, []);
 
   // Fetch Public Live Scoreboard from MongoDB Backend
   const refreshScoreboard = useCallback(async () => {
@@ -319,6 +371,7 @@ export function AppProvider({ children }) {
       isAdminLoggedIn,
       currentUser,
       authToken,
+      authLoading,
       adminLogin,
       adminLogout,
       apiFetch,

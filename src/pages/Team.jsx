@@ -158,7 +158,9 @@ export default function Team() {
           <div className="section-badge" style={{ color: activeCat?.color, borderColor: activeCat?.color + '44' }}>
             {ActiveIcon && <ActiveIcon size={14} />} {activeCat?.label}
           </div>
-          <h2 className="section-title">{activeCat?.label} Team</h2>
+          <h2 className="section-title">
+            {activeCategory === 'organizer' ? 'Organization Team' : 'Core Team'}
+          </h2>
           <p className="section-sub">
             {activeCategory === 'organizer'
               ? 'The esteemed leadership and organization team behind Ignitron 2K26'

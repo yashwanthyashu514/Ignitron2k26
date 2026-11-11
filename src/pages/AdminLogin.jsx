@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import { Lock, User, Eye, EyeOff, AlertCircle, ArrowLeft, Sparkles, CheckCircle2 } from 'lucide-react';
@@ -9,8 +9,18 @@ export default function AdminLogin() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const { adminLogin } = useApp();
+  const { adminLogin, currentUser, authToken } = useApp();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (authToken && currentUser) {
+      if (currentUser.role === 'superadmin') {
+        navigate('/admin/dashboard', { replace: true });
+      } else if (currentUser.role === 'coordinator') {
+        navigate('/coordinator/dashboard', { replace: true });
+      }
+    }
+  }, [authToken, currentUser, navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();

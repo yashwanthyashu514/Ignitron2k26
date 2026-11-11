@@ -1,6 +1,6 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { X, ChevronLeft, ChevronRight, Images, ZoomIn } from 'lucide-react';
+import { X, ChevronLeft, ChevronRight, Images, ZoomIn, Volume2, VolumeX } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 
 const PHOTOS_2K25 = [
@@ -158,6 +158,58 @@ function LightboxImage({ src, alt }) {
 export default function Gallery() {
   const { gallery } = useApp();
   const [lightbox, setLightbox] = useState(null); // { sectionIdx, photoIdx }
+  const [isPlaying, setIsPlaying] = useState(false);
+  const audioRef = useRef(null);
+
+  // Play audio only while visiting the Gallery page, stop immediately on navigation away
+  useEffect(() => {
+    const audio = new Audio('/gallery/2k25/music.mpeg');
+    audio.loop = true;
+    audio.volume = 0.55;
+    audioRef.current = audio;
+
+    const playPromise = audio.play();
+    if (playPromise !== undefined) {
+      playPromise
+        .then(() => setIsPlaying(true))
+        .catch(() => {
+          // Autoplay policy prevented immediate playback without gesture
+          setIsPlaying(false);
+        });
+    }
+
+    // Fallback: If autoplay was blocked by browser, start playback on first click/tap anywhere on page
+    const handleFirstGesture = () => {
+      if (audioRef.current && audioRef.current.paused) {
+        audioRef.current.play()
+          .then(() => setIsPlaying(true))
+          .catch(() => {});
+      }
+    };
+    window.addEventListener('click', handleFirstGesture, { once: true });
+    window.addEventListener('touchstart', handleFirstGesture, { once: true });
+
+    return () => {
+      window.removeEventListener('click', handleFirstGesture);
+      window.removeEventListener('touchstart', handleFirstGesture);
+      audio.pause();
+      audio.currentTime = 0;
+      audioRef.current = null;
+    };
+  }, []);
+
+  const toggleAudio = (e) => {
+    e.stopPropagation();
+    if (!audioRef.current) return;
+    if (isPlaying) {
+      audioRef.current.pause();
+      setIsPlaying(false);
+    } else {
+      audioRef.current.play()
+        .then(() => setIsPlaying(true))
+        .catch(() => {});
+    }
+  };
 
   const gallerySections = useMemo(() => {
     const base = [
@@ -248,6 +300,28 @@ export default function Gallery() {
           </div>
           <h1 className="page-hero-title">Gallery</h1>
           <p className="page-hero-sub">Reliving the electric energy and memories of Ignitron 2K25</p>
+
+          {/* Cyber Audio Player Pill */}
+          <div className="gallery-audio-container">
+            <button
+              type="button"
+              className={`gallery-audio-pill ${isPlaying ? 'playing' : 'paused'}`}
+              onClick={toggleAudio}
+              title={isPlaying ? 'Pause Background Music' : 'Play Background Music'}
+              aria-label="Toggle Gallery Soundtrack"
+            >
+              <div className="audio-equalizer">
+                <span className={`eq-bar eq-bar-1 ${isPlaying ? 'active' : ''}`} />
+                <span className={`eq-bar eq-bar-2 ${isPlaying ? 'active' : ''}`} />
+                <span className={`eq-bar eq-bar-3 ${isPlaying ? 'active' : ''}`} />
+                <span className={`eq-bar eq-bar-4 ${isPlaying ? 'active' : ''}`} />
+              </div>
+              <span className="audio-pill-label">
+                {isPlaying ? 'Ignitron 2K25 Soundtrack Playing' : 'Play Gallery Soundtrack'}
+              </span>
+              {isPlaying ? <Volume2 size={16} /> : <VolumeX size={16} />}
+            </button>
+          </div>
         </div>
       </div>
 

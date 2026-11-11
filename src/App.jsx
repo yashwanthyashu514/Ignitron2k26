@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { AppProvider } from './context/AppContext';
+import { AppProvider, useApp } from './context/AppContext';
 import Navbar from './components/Navbar';
 import CyberLoader from './components/CyberLoader';
 import Home from './pages/Home';
@@ -21,6 +21,35 @@ function PublicLayout({ children }) {
       <main style={{ paddingTop: '80px' }}>{children}</main>
     </>
   );
+}
+
+function ProtectedRoute({ children, requiredRole }) {
+  const { currentUser, authToken, authLoading } = useApp();
+
+  if (authLoading) {
+    return (
+      <CyberLoader
+        fullScreen
+        text="VERIFYING ACCESS PERMISSIONS..."
+        subtext="Ignitron 2K26 · Security Protocol Active"
+      />
+    );
+  }
+
+  // Without valid login token and session, immediately bounce to /admin
+  if (!authToken || !currentUser) {
+    return <Navigate to="/admin" replace />;
+  }
+
+  // Role protection: Super Admin vs Coordinator
+  if (requiredRole && currentUser.role !== requiredRole) {
+    if (currentUser.role === 'coordinator') {
+      return <Navigate to="/coordinator/dashboard" replace />;
+    }
+    return <Navigate to="/admin" replace />;
+  }
+
+  return children;
 }
 
 export default function App() {
@@ -64,8 +93,22 @@ export default function App() {
           <Route path="/team" element={<PublicLayout><Team /></PublicLayout>} />
           <Route path="/gallery" element={<PublicLayout><Gallery /></PublicLayout>} />
           <Route path="/admin" element={<AdminLogin />} />
-          <Route path="/admin/dashboard" element={<AdminDashboard />} />
-          <Route path="/coordinator/dashboard" element={<CoordinatorDashboard />} />
+          <Route
+            path="/admin/dashboard"
+            element={
+              <ProtectedRoute requiredRole="superadmin">
+                <AdminDashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/coordinator/dashboard"
+            element={
+              <ProtectedRoute requiredRole="coordinator">
+                <CoordinatorDashboard />
+              </ProtectedRoute>
+            }
+          />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </BrowserRouter>

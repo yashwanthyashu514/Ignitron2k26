@@ -127,3 +127,4 @@ router.delete('/:id', verifyToken, requireSuperAdmin, async (req, res) => {
 });
 
 export default router;
+

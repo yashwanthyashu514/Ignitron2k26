@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Navigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import {
   Users,
@@ -38,8 +38,16 @@ import { generateCoordinatorReportPDF } from '../utils/pdfGenerator';
 import { SkeletonCards, SkeletonTable, CyberErrorState } from '../components/CyberSkeleton';
 
 export default function CoordinatorDashboard() {
-  const { currentUser, adminLogout, apiFetch } = useApp();
+  const { currentUser, authToken, adminLogout, apiFetch } = useApp();
   const navigate = useNavigate();
+
+  // Instant synchronous guard — completely blocks rendering if unauthenticated
+  if (!authToken || !currentUser) {
+    return <Navigate to="/admin" replace />;
+  }
+  if (currentUser.role === 'superadmin') {
+    return <Navigate to="/admin/dashboard" replace />;
+  }
 
   const [activeTab, setActiveTab] = useState('teams'); // 'teams', 'scoring', 'history'
   const [teams, setTeams] = useState([]);

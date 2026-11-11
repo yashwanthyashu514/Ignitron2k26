@@ -74,3 +74,4 @@ router.post('/', verifyToken, requireSuperAdmin, async (req, res) => {
 });
 
 export default router;
+

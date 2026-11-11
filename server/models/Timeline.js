@@ -50,3 +50,4 @@ const timelineSchema = new mongoose.Schema({
 timelineSchema.index({ day: 1, order: 1 });
 
 export const Timeline = mongoose.model('Timeline', timelineSchema);
+
