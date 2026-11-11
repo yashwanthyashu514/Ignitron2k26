@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
 import { X, ChevronLeft, ChevronRight, Images, ZoomIn } from 'lucide-react';
 
 const PHOTOS_2K25 = [
@@ -69,6 +70,90 @@ const GALLERY_DATA = [
   },
 ];
 
+function GalleryCardItem({ photo, photoIdx, sectionIdx, sectionColor, openLightbox }) {
+  const [loaded, setLoaded] = useState(false);
+  const [currentSrc, setCurrentSrc] = useState(photo.src);
+  const [hasError, setHasError] = useState(false);
+
+  const handleError = () => {
+    if (currentSrc.endsWith('.JPG')) {
+      setCurrentSrc(currentSrc.replace(/\.JPG$/, '.jpg'));
+    } else if (currentSrc.endsWith('.jpg')) {
+      setCurrentSrc(currentSrc.replace(/\.jpg$/, '.JPG'));
+    } else {
+      setHasError(true);
+    }
+  };
+
+  return (
+    <motion.div
+      className="gallery-item"
+      style={{ '--hover-color': sectionColor }}
+      onClick={() => openLightbox(sectionIdx, photoIdx)}
+      role="button"
+      tabIndex={0}
+      onKeyDown={e => e.key === 'Enter' && openLightbox(sectionIdx, photoIdx)}
+      aria-label={`View ${photo.caption}`}
+      initial={{ opacity: 0, y: 24, scale: 0.96 }}
+      whileInView={{ opacity: 1, y: 0, scale: 1 }}
+      viewport={{ once: true, margin: '-40px' }}
+      transition={{ duration: 0.5, delay: (photoIdx % 8) * 0.06, ease: [0.22, 1, 0.36, 1] }}
+      whileHover={{ y: -6, transition: { duration: 0.25 } }}
+    >
+      {!loaded && !hasError && (
+        <div className="gallery-item-skeleton">
+          <div className="gallery-grid-spinner" />
+        </div>
+      )}
+      <img
+        src={currentSrc}
+        alt={photo.caption}
+        loading="lazy"
+        onLoad={() => setLoaded(true)}
+        onError={handleError}
+        className={loaded ? 'is-loaded' : ''}
+      />
+      <div className="gallery-item-overlay">
+        <span className="gallery-zoom-icon">
+          <ZoomIn size={24} color="#00D9FF" />
+        </span>
+      </div>
+    </motion.div>
+  );
+}
+
+function LightboxImage({ src, alt }) {
+  const [loaded, setLoaded] = useState(false);
+  const [currentSrc, setCurrentSrc] = useState(src);
+
+  useEffect(() => {
+    setLoaded(false);
+    setCurrentSrc(src);
+  }, [src]);
+
+  return (
+    <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '260px', width: '100%' }}>
+      {!loaded && (
+        <div style={{ position: 'absolute', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px' }}>
+          <div className="gallery-grid-spinner" style={{ width: '36px', height: '36px' }} />
+          <span style={{ fontSize: '11px', color: '#00D9FF', letterSpacing: '2px', textTransform: 'uppercase', fontFamily: 'sans-serif' }}>Loading Photo...</span>
+        </div>
+      )}
+      <img
+        className="lb-image"
+        src={currentSrc}
+        alt={alt}
+        onLoad={() => setLoaded(true)}
+        onError={() => {
+          if (currentSrc.endsWith('.JPG')) setCurrentSrc(currentSrc.replace(/\.JPG$/, '.jpg'));
+          else if (currentSrc.endsWith('.jpg')) setCurrentSrc(currentSrc.replace(/\.jpg$/, '.JPG'));
+        }}
+        style={{ opacity: loaded ? 1 : 0, transition: 'opacity 0.35s ease' }}
+      />
+    </div>
+  );
+}
+
 export default function Gallery() {
   const [lightbox, setLightbox] = useState(null); // { sectionIdx, photoIdx }
 
@@ -136,23 +221,14 @@ export default function Gallery() {
 
           <div className="gallery-grid">
             {section.photos.map((photo, photoIdx) => (
-              <div
+              <GalleryCardItem
                 key={photoIdx}
-                className="gallery-item"
-                style={{ '--hover-color': section.color }}
-                onClick={() => openLightbox(sectionIdx, photoIdx)}
-                role="button"
-                tabIndex={0}
-                onKeyDown={e => e.key === 'Enter' && openLightbox(sectionIdx, photoIdx)}
-                aria-label={`View ${photo.caption}`}
-              >
-                <img src={photo.src} alt={photo.caption} loading="lazy" />
-                <div className="gallery-item-overlay">
-                  <span className="gallery-zoom-icon">
-                    <ZoomIn size={24} color="#00D9FF" />
-                  </span>
-                </div>
-              </div>
+                photo={photo}
+                photoIdx={photoIdx}
+                sectionIdx={sectionIdx}
+                sectionColor={section.color}
+                openLightbox={openLightbox}
+              />
             ))}
           </div>
         </section>
@@ -175,8 +251,7 @@ export default function Gallery() {
             <button className="lb-prev" onClick={prevPhoto} aria-label="Previous">
               <ChevronLeft size={28} />
             </button>
-            <img
-              className="lb-image"
+            <LightboxImage
               src={allPhotos[lightbox.photoIdx]?.src}
               alt={allPhotos[lightbox.photoIdx]?.caption}
             />

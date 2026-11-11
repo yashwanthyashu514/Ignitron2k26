@@ -6,11 +6,52 @@ const galleryData = Array.from({ length: 19 }, (_, i) => {
   const num = String(i + 1).padStart(2, "0");
   return {
     id: i + 1,
-    image: `/gallery/${num}.JPG`,
+    image: `/gallery/${num}.jpg`,
     title: "Ignitron 2K25",
     year: "2K25",
   };
 });
+
+function GalleryCardImage({ item }) {
+  const [loaded, setLoaded] = useState(false);
+  const [currentSrc, setCurrentSrc] = useState(item.image);
+  const [hasError, setHasError] = useState(false);
+
+  const handleError = () => {
+    // If lowercase .jpg failed, try uppercase .JPG as fallback
+    if (currentSrc.endsWith('.jpg')) {
+      setCurrentSrc(currentSrc.replace(/\.jpg$/, '.JPG'));
+    } else if (currentSrc.endsWith('.JPG')) {
+      setCurrentSrc(currentSrc.replace(/\.JPG$/, '.jpg'));
+    } else {
+      setHasError(true);
+    }
+  };
+
+  return (
+    <div className="gallery-image-wrapper">
+      {!loaded && !hasError && (
+        <div className="gallery-skeleton-shimmer">
+          <div className="gallery-loader-spinner" />
+          <span className="gallery-loader-text">Loading 2K25...</span>
+        </div>
+      )}
+      <img
+        src={currentSrc}
+        alt={item.title}
+        draggable="false"
+        loading="lazy"
+        onLoad={() => setLoaded(true)}
+        onError={handleError}
+        className={`gallery-card-img ${loaded ? 'is-loaded' : 'is-loading'}`}
+      />
+      <div className="gallery-card-overlay">
+        <span>MEMORIES · {item.year}</span>
+        <h3>{item.title}</h3>
+      </div>
+    </div>
+  );
+}
 
 export default function Gallery() {
   const [active, setActive] = useState(0);
@@ -143,17 +184,7 @@ export default function Gallery() {
                   y: -12,
                 }}
               >
-                <div className="gallery-image-wrapper">
-                  <img
-                    src={item.image}
-                    alt={item.title}
-                    draggable="false"
-                  />
-                  <div className="gallery-card-overlay">
-                    <span>MEMORIES · {item.year}</span>
-                    <h3>{item.title}</h3>
-                  </div>
-                </div>
+                <GalleryCardImage item={item} />
               </motion.div>
             );
           })}
