@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, Download, Calendar, Users, Home, Clock } from 'lucide-react';
+import { Menu, X, Download, Calendar, Users, Home, Clock, Hotel } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 
 export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  const { brochureLink } = useApp();
+  const { brochureLink, accommodationLink } = useApp();
   const location = useLocation();
 
   useEffect(() => {
@@ -60,6 +60,15 @@ export default function Navbar() {
             Brochure
           </a>
           <a
+            href={accommodationLink || 'https://accomadation.vercel.app/'}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="btn-accommodation"
+          >
+            <Hotel size={16} />
+            Accommodation
+          </a>
+          <a
             href="/events#register"
             className="btn-register"
           >
@@ -91,6 +100,16 @@ export default function Navbar() {
           ))}
           <a href={brochureLink} target="_blank" rel="noreferrer" className="mobile-link" onClick={() => setMenuOpen(false)}>
             <Download size={16} /> Download Brochure
+          </a>
+          <a
+            href={accommodationLink || 'https://accomadation.vercel.app/'}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mobile-link"
+            style={{ color: '#c084fc', borderLeft: '2px solid #c084fc', paddingLeft: '10px' }}
+            onClick={() => setMenuOpen(false)}
+          >
+            <Hotel size={16} /> Book Accommodation
           </a>
           <Link to="/events#register" className="mobile-link highlight" onClick={() => setMenuOpen(false)}>
             Register Now

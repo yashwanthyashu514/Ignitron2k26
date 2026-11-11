@@ -8,7 +8,7 @@ import {
   Calendar, Users, Trophy, Clock, Link, FileText,
   Settings, ChevronDown, ChevronUp, CheckCircle, Menu, ChevronRight, Globe, Folder,
   Shield, Check, AlertTriangle, XCircle, Search, Download, Eye, KeyRound, RefreshCw,
-  BarChart3, UserPlus, Sliders, Activity, Filter
+  BarChart3, UserPlus, Sliders, Activity, Filter, Hotel
 } from 'lucide-react';
 import { generateAdminFinalReportPDF } from '../utils/pdfGenerator';
 
@@ -1539,15 +1539,25 @@ function ScoreboardManager({ toast }) {
 }
 
 // ==========================================
-// 8. CREW TEAM MANAGER
+// 8. CREW TEAM MANAGER (Connected to MongoDB & Cloudinary)
 // ==========================================
 function TeamManager({ toast }) {
-  const { teamMembers, setTeamMembers } = useApp();
+  const { teamMembers, refreshTeamMembers, apiFetch } = useApp();
   const [editing, setEditing] = useState(null);
-  const [form, setForm] = useState({ name: '', role: '', category: 'organizer', org: '', photo: '' });
+  const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [filterCat, setFilterCat] = useState('all');
+  const [form, setForm] = useState({
+    name: '',
+    role: '',
+    category: 'organizer',
+    org: 'GM University',
+    photo: '',
+    cloudinaryPublicId: '',
+  });
 
   const resetForm = () => {
-    setForm({ name: '', role: '', category: 'organizer', org: '', photo: '' });
+    setForm({ name: '', role: '', category: 'organizer', org: 'GM University', photo: '', cloudinaryPublicId: '' });
     setEditing(null);
   };
 
@@ -1556,56 +1566,133 @@ function TeamManager({ toast }) {
       name: m.name || '',
       role: m.role || '',
       category: m.category === 'core' ? 'core' : 'organizer',
-      org: m.org || '',
+      org: m.org || 'GM University',
       photo: m.photo || '',
+      cloudinaryPublicId: m.cloudinaryPublicId || '',
     });
-    setEditing(m.id);
+    setEditing(m.id || m._id);
+    document.getElementById('team-form-card')?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  const handleFileChange = (e) => {
+  const handleFileChange = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
+    if (file.size > 10 * 1024 * 1024) {
+      toast('Image file exceeds 10MB limit.');
+      return;
+    }
+
+    setUploading(true);
     const reader = new FileReader();
-    reader.onloadend = () => {
-      setForm(prev => ({ ...prev, photo: reader.result }));
+    reader.onloadend = async () => {
+      try {
+        const res = await apiFetch('/api/upload', {
+          method: 'POST',
+          body: JSON.stringify({
+            image: reader.result,
+            folder: 'ignitron/team',
+          }),
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          setForm(prev => ({
+            ...prev,
+            photo: data.url,
+            cloudinaryPublicId: data.publicId || '',
+          }));
+          toast('Photo uploaded successfully!');
+        } else {
+          setForm(prev => ({ ...prev, photo: reader.result }));
+          toast('Photo attached locally (fallback)');
+        }
+      } catch {
+        setForm(prev => ({ ...prev, photo: reader.result }));
+        toast('Photo attached locally (fallback)');
+      } finally {
+        setUploading(false);
+      }
     };
     reader.readAsDataURL(file);
   };
 
-  const handleSave = () => {
-    if (!form.name) return;
-    if (editing) {
-      setTeamMembers(prev => prev.map(m => m.id === editing ? { ...form, id: editing } : m));
-      toast('Team member updated!');
-    } else {
-      setTeamMembers(prev => [...prev, { ...form, id: Date.now().toString() }]);
-      toast('Team member added!');
+  const handleSave = async () => {
+    if (!form.name.trim() || !form.role.trim()) {
+      toast('Please enter both name and role');
+      return;
     }
-    resetForm();
+
+    setSaving(true);
+    try {
+      if (editing) {
+        const res = await apiFetch(`/api/team/${editing}`, {
+          method: 'PUT',
+          body: JSON.stringify(form),
+        });
+        if (res.ok) {
+          toast('Team member updated in database & synced across all devices!');
+        } else {
+          const errData = await res.json();
+          toast(`Error: ${errData.error || 'Failed to update'}`);
+        }
+      } else {
+        const res = await apiFetch('/api/team', {
+          method: 'POST',
+          body: JSON.stringify(form),
+        });
+        if (res.ok) {
+          toast('Team member added to database & synced across all devices!');
+        } else {
+          const errData = await res.json();
+          toast(`Error: ${errData.error || 'Failed to add'}`);
+        }
+      }
+      await refreshTeamMembers();
+      resetForm();
+    } catch {
+      toast('Failed to save team member to central database');
+    } finally {
+      setSaving(false);
+    }
   };
 
-  const handleDelete = (id) => {
-    if (window.confirm('Delete team member?')) {
-      setTeamMembers(prev => prev.filter(m => m.id !== id));
-      toast('Team member deleted');
+  const handleDelete = async (id, name) => {
+    if (window.confirm(`Delete team member "${name}" from central database?`)) {
+      try {
+        const res = await apiFetch(`/api/team/${id}`, { method: 'DELETE' });
+        if (res.ok) {
+          toast(`Deleted "${name}" successfully across all devices`);
+          await refreshTeamMembers();
+        } else {
+          toast('Failed to delete team member');
+        }
+      } catch {
+        toast('Network error deleting team member');
+      }
     }
   };
+
+  const filteredMembers = (teamMembers || []).filter(m => {
+    if (filterCat === 'all') return true;
+    return m.category === filterCat;
+  });
 
   return (
     <div>
-      <div className="admin-form-card">
-        <h4 className="admin-form-title">{editing ? 'Edit Member' : 'Add Member'}</h4>
+      <div className="admin-form-card" id="team-form-card">
+        <h4 className="admin-form-title">{editing ? 'Edit Team Member' : 'Add Team Member'}</h4>
         <div className="admin-form-grid">
           <div className="form-group">
             <label className="form-label">Name *</label>
             <input className="form-input" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} placeholder="Full Name" />
           </div>
           <div className="form-group">
-            <label className="form-label">Role</label>
+            <label className="form-label">Role *</label>
             <input className="form-input" value={form.role} onChange={e => setForm({ ...form, role: e.target.value })} placeholder="e.g. Vice Chancellor / Core Team" />
           </div>
           <div className="form-group">
-            <label className="form-label">Category</label>
+            <label className="form-label">Category *</label>
             <select className="form-input" value={form.category} onChange={e => setForm({ ...form, category: e.target.value })}>
               <option value="organizer">Organizer</option>
               <option value="core">Core Member</option>
@@ -1623,14 +1710,14 @@ function TeamManager({ toast }) {
                 style={{ flex: 1, minWidth: '220px' }}
                 value={form.photo}
                 onChange={e => setForm({ ...form, photo: e.target.value })}
-                placeholder="Image path (/team/photo.png) or URL"
+                placeholder="Image URL or local path (/team/photo.png)"
               />
               <label
                 htmlFor="team-photo-upload"
                 className="btn-admin-cancel"
                 style={{ cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '6px', margin: 0, padding: '8px 14px' }}
               >
-                <Upload size={14} /> Upload Image
+                <Upload size={14} /> {uploading ? 'Uploading...' : 'Upload Image'}
               </label>
               <input
                 id="team-photo-upload"
@@ -1638,6 +1725,7 @@ function TeamManager({ toast }) {
                 accept="image/*"
                 onChange={handleFileChange}
                 style={{ display: 'none' }}
+                disabled={uploading}
               />
             </div>
             {form.photo && (
@@ -1645,12 +1733,14 @@ function TeamManager({ toast }) {
                 <img
                   src={form.photo}
                   alt="Preview"
-                  style={{ width: '40px', height: '40px', borderRadius: '50%', objectFit: 'cover', border: '2px solid #00D9FF' }}
+                  style={{ width: '42px', height: '42px', borderRadius: '50%', objectFit: 'cover', border: '2px solid #00D9FF' }}
                 />
-                <span style={{ fontSize: '12px', color: '#94a3b8' }}>Image selected</span>
+                <span style={{ fontSize: '12px', color: '#94a3b8' }}>
+                  {form.cloudinaryPublicId ? '✓ Cloudinary Hosted' : 'Photo Attached'}
+                </span>
                 <button
                   type="button"
-                  onClick={() => setForm(prev => ({ ...prev, photo: '' }))}
+                  onClick={() => setForm(prev => ({ ...prev, photo: '', cloudinaryPublicId: '' }))}
                   style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', fontSize: '12px' }}
                 >
                   Clear Image
@@ -1659,24 +1749,50 @@ function TeamManager({ toast }) {
             )}
           </div>
         </div>
-        <div style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
-          <button className="btn-admin-save" onClick={handleSave}><Save size={16} /> Save</button>
+        <div style={{ display: 'flex', gap: '8px', marginTop: '14px' }}>
+          <button className="btn-admin-save" onClick={handleSave} disabled={saving || uploading}>
+            <Save size={16} /> {saving ? 'Saving to Database...' : 'Save Member'}
+          </button>
           {editing && <button className="btn-admin-cancel" onClick={resetForm}><X size={16} /> Cancel</button>}
         </div>
       </div>
 
+      {/* Category Filter */}
+      <div style={{ display: 'flex', gap: '8px', margin: '20px 0 12px' }}>
+        {['all', 'organizer', 'core'].map(cat => (
+          <button
+            key={cat}
+            onClick={() => setFilterCat(cat)}
+            className={`btn-admin-filter ${filterCat === cat ? 'active' : ''}`}
+            style={{
+              padding: '6px 14px',
+              borderRadius: '6px',
+              border: '1px solid rgba(255,255,255,0.1)',
+              background: filterCat === cat ? 'rgba(0, 217, 255, 0.15)' : 'rgba(15, 23, 42, 0.6)',
+              color: filterCat === cat ? '#00D9FF' : '#94a3b8',
+              cursor: 'pointer',
+              fontSize: '13px',
+              fontWeight: 600,
+              textTransform: 'capitalize',
+            }}
+          >
+            {cat === 'all' ? 'All Members' : cat === 'core' ? 'Core Members' : 'Organizers'}
+          </button>
+        ))}
+      </div>
+
       <div className="admin-list">
-        {teamMembers.map(m => (
-          <div className="admin-list-item" key={m.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
+        {filteredMembers.map(m => (
+          <div className="admin-list-item" key={m.id || m._id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
               {m.photo ? (
                 <img
                   src={m.photo}
                   alt={m.name}
-                  style={{ width: '38px', height: '38px', borderRadius: '50%', objectFit: 'cover', border: '1px solid rgba(255,255,255,0.15)' }}
+                  style={{ width: '40px', height: '40px', borderRadius: '50%', objectFit: 'cover', border: '1px solid rgba(255,255,255,0.15)' }}
                 />
               ) : (
-                <div style={{ width: '38px', height: '38px', borderRadius: '50%', background: 'rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: 600, color: '#38bdf8' }}>
+                <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '13px', fontWeight: 600, color: '#38bdf8' }}>
                   {(m.name || '').slice(0, 2).toUpperCase()}
                 </div>
               )}
@@ -1684,15 +1800,16 @@ function TeamManager({ toast }) {
                 <div className="admin-list-name">{m.name}</div>
                 <div className="admin-list-meta">
                   <span>{m.role}</span>
-                  <span style={{ textTransform: 'capitalize', color: m.category === 'core' ? '#38bdf8' : '#34d399' }}>
+                  <span style={{ textTransform: 'capitalize', color: m.category === 'core' ? '#38bdf8' : '#34d399', fontWeight: 600 }}>
                     {m.category === 'core' ? 'Core Member' : 'Organizer'}
                   </span>
+                  {m.org && <span style={{ color: '#64748b' }}>({m.org})</span>}
                 </div>
               </div>
             </div>
             <div className="admin-list-actions">
               <button className="btn-edit" onClick={() => startEdit(m)} title="Edit Member"><Edit3 size={15} /></button>
-              <button className="btn-delete" onClick={() => handleDelete(m.id)} title="Delete Member"><Trash2 size={15} /></button>
+              <button className="btn-delete" onClick={() => handleDelete(m.id || m._id, m.name)} title="Delete Member"><Trash2 size={15} /></button>
             </div>
           </div>
         ))}
@@ -1702,37 +1819,542 @@ function TeamManager({ toast }) {
 }
 
 // ==========================================
-// 9. COUNTDOWN MANAGER
+// 9. COUNTDOWN MANAGER (MongoDB Sync)
 // ==========================================
 function CountdownManager({ toast }) {
   const { countdown, setCountdown } = useApp();
   const [val, setVal] = useState(countdown);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    setVal(countdown);
+  }, [countdown]);
+
+  const handleSave = async () => {
+    setSaving(true);
+    await setCountdown(val);
+    setSaving(false);
+    toast('Countdown target date updated and synchronized across all devices!');
+  };
 
   return (
     <div className="admin-form-card">
       <h4 className="admin-form-title">Update Countdown Target Date</h4>
+      <p style={{ fontSize: '13px', color: '#94a3b8', marginBottom: '14px' }}>
+        Changes are stored in the central MongoDB database and revalidated across all connected devices in real time.
+      </p>
       <input type="datetime-local" className="form-input" value={val} onChange={e => setVal(e.target.value)} />
-      <button className="btn-admin-save" style={{ marginTop: '12px' }} onClick={() => { setCountdown(val); toast('Countdown updated!'); }}>
-        <Save size={16} /> Save Countdown
+      <button className="btn-admin-save" style={{ marginTop: '14px' }} onClick={handleSave} disabled={saving}>
+        <Save size={16} /> {saving ? 'Saving to Database...' : 'Save Countdown'}
       </button>
     </div>
   );
 }
 
 // ==========================================
-// 10. BROCHURE LINK MANAGER
+// 10. BROCHURE LINK MANAGER (MongoDB Sync)
 // ==========================================
 function BrochureManager({ toast }) {
   const { brochureLink, setBrochureLink } = useApp();
   const [val, setVal] = useState(brochureLink);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    setVal(brochureLink);
+  }, [brochureLink]);
+
+  const handleSave = async () => {
+    setSaving(true);
+    await setBrochureLink(val);
+    setSaving(false);
+    toast('Event brochure link updated and synchronized across all devices!');
+  };
 
   return (
     <div className="admin-form-card">
       <h4 className="admin-form-title">Update Event Brochure Link</h4>
+      <p style={{ fontSize: '13px', color: '#94a3b8', marginBottom: '14px' }}>
+        Central database driven link for the brochure button in the header and mobile drawer.
+      </p>
       <input type="text" className="form-input" value={val} onChange={e => setVal(e.target.value)} placeholder="https://..." />
-      <button className="btn-admin-save" style={{ marginTop: '12px' }} onClick={() => { setBrochureLink(val); toast('Brochure link updated!'); }}>
-        <Save size={16} /> Save Brochure Link
+      <button className="btn-admin-save" style={{ marginTop: '14px' }} onClick={handleSave} disabled={saving}>
+        <Save size={16} /> {saving ? 'Saving to Database...' : 'Save Brochure Link'}
       </button>
+    </div>
+  );
+}
+
+// ==========================================
+// 11. ACCOMMODATION PORTAL MANAGER (MongoDB Sync)
+// ==========================================
+function AccommodationManager({ toast }) {
+  const { accommodationLink, setAccommodationLink } = useApp();
+  const [val, setVal] = useState(accommodationLink || 'https://accomadation.vercel.app/');
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (accommodationLink) setVal(accommodationLink);
+  }, [accommodationLink]);
+
+  const handleSave = async () => {
+    setSaving(true);
+    await setAccommodationLink(val);
+    setSaving(false);
+    toast('Accommodation booking URL saved to database and live across all devices!');
+  };
+
+  return (
+    <div className="admin-form-card">
+      <h4 className="admin-form-title">Book My Accommodation Portal</h4>
+      <p style={{ fontSize: '13px', color: '#94a3b8', marginBottom: '14px' }}>
+        Configure the official redirect destination for the &quot;Book Accommodation&quot; buttons on the navbar and mobile menu.
+      </p>
+      <div className="form-group">
+        <label className="form-label">Accommodation Website URL *</label>
+        <input
+          type="text"
+          className="form-input"
+          value={val}
+          onChange={e => setVal(e.target.value)}
+          placeholder="https://accomadation.vercel.app/"
+        />
+      </div>
+      <div style={{ display: 'flex', gap: '10px', marginTop: '14px' }}>
+        <button className="btn-admin-save" onClick={handleSave} disabled={saving}>
+          <Save size={16} /> {saving ? 'Saving to Database...' : 'Save Accommodation Link'}
+        </button>
+        <a
+          href={val}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="btn-admin-cancel"
+          style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+        >
+          <Globe size={14} /> Test Portal Link
+        </a>
+      </div>
+    </div>
+  );
+}
+
+// ==========================================
+// 12. GALLERY MANAGER (Cloudinary & Database Sync)
+// ==========================================
+function GalleryManager({ toast }) {
+  const { gallery, refreshGallery, apiFetch } = useApp();
+  const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [form, setForm] = useState({
+    caption: '',
+    year: '2K25',
+    src: '',
+    cloudinaryPublicId: '',
+    isHomeFeatured: false,
+  });
+
+  const handleFileChange = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 15 * 1024 * 1024) {
+      toast('Image exceeds 15MB limit.');
+      return;
+    }
+
+    setUploading(true);
+    const reader = new FileReader();
+    reader.onloadend = async () => {
+      try {
+        const res = await apiFetch('/api/upload', {
+          method: 'POST',
+          body: JSON.stringify({
+            image: reader.result,
+            folder: 'ignitron/gallery',
+          }),
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          setForm(prev => ({
+            ...prev,
+            src: data.url,
+            cloudinaryPublicId: data.publicId || '',
+          }));
+          toast('Gallery photo uploaded!');
+        } else {
+          setForm(prev => ({ ...prev, src: reader.result }));
+          toast('Photo attached locally (fallback)');
+        }
+      } catch {
+        setForm(prev => ({ ...prev, src: reader.result }));
+        toast('Photo attached locally (fallback)');
+      } finally {
+        setUploading(false);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleAddPhoto = async () => {
+    if (!form.src) {
+      toast('Please upload an image or provide a valid photo URL');
+      return;
+    }
+
+    setSaving(true);
+    try {
+      const res = await apiFetch('/api/gallery', {
+        method: 'POST',
+        body: JSON.stringify(form),
+      });
+
+      if (res.ok) {
+        toast('Photo added to gallery and synced across all devices!');
+        setForm({ caption: '', year: '2K25', src: '', cloudinaryPublicId: '', isHomeFeatured: false });
+        await refreshGallery();
+      } else {
+        const errData = await res.json();
+        toast(`Error: ${errData.error || 'Failed to add photo'}`);
+      }
+    } catch {
+      toast('Failed to save gallery photo');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDeletePhoto = async (id, caption) => {
+    if (window.confirm(`Delete photo "${caption}" from gallery?`)) {
+      try {
+        const res = await apiFetch(`/api/gallery/${id}`, { method: 'DELETE' });
+        if (res.ok) {
+          toast('Photo deleted and removed across all devices');
+          await refreshGallery();
+        } else {
+          toast('Failed to delete photo');
+        }
+      } catch {
+        toast('Network error deleting photo');
+      }
+    }
+  };
+
+  return (
+    <div>
+      <div className="admin-form-card">
+        <h4 className="admin-form-title">Add Photo to Gallery</h4>
+        <div className="admin-form-grid">
+          <div className="form-group">
+            <label className="form-label">Caption / Description</label>
+            <input
+              className="form-input"
+              value={form.caption}
+              onChange={e => setForm({ ...form, caption: e.target.value })}
+              placeholder="e.g. Hackathon Grand Finale Winner"
+            />
+          </div>
+          <div className="form-group">
+            <label className="form-label">Event Year</label>
+            <select
+              className="form-input"
+              value={form.year}
+              onChange={e => setForm({ ...form, year: e.target.value })}
+            >
+              <option value="2K25">Ignitron 2K25</option>
+              <option value="2K26">Ignitron 2K26</option>
+            </select>
+          </div>
+          <div className="form-group" style={{ gridColumn: 'span 2' }}>
+            <label className="form-label">Photo Source (Upload or Image URL)</label>
+            <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+              <input
+                className="form-input"
+                style={{ flex: 1, minWidth: '220px' }}
+                value={form.src}
+                onChange={e => setForm({ ...form, src: e.target.value })}
+                placeholder="https://... or /gallery/photo.jpg"
+              />
+              <label
+                htmlFor="gallery-file-upload"
+                className="btn-admin-cancel"
+                style={{ cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '6px', margin: 0, padding: '8px 14px' }}
+              >
+                <Upload size={14} /> {uploading ? 'Uploading...' : 'Upload Image'}
+              </label>
+              <input
+                id="gallery-file-upload"
+                type="file"
+                accept="image/*"
+                onChange={handleFileChange}
+                style={{ display: 'none' }}
+                disabled={uploading}
+              />
+            </div>
+            {form.src && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '10px' }}>
+                <img
+                  src={form.src}
+                  alt="Preview"
+                  style={{ width: '60px', height: '42px', borderRadius: '6px', objectFit: 'cover', border: '1px solid #00D9FF' }}
+                />
+                <span style={{ fontSize: '12px', color: '#94a3b8' }}>
+                  {form.cloudinaryPublicId ? '✓ Uploaded to Cloudinary' : 'Image Ready'}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setForm(prev => ({ ...prev, src: '', cloudinaryPublicId: '' }))}
+                  style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', fontSize: '12px' }}
+                >
+                  Clear
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+        <div style={{ marginTop: '14px' }}>
+          <button className="btn-admin-save" onClick={handleAddPhoto} disabled={saving || uploading}>
+            <Plus size={16} /> {saving ? 'Adding to Gallery...' : 'Add Photo to Gallery'}
+          </button>
+        </div>
+      </div>
+
+      <div style={{ marginTop: '24px' }}>
+        <h4 style={{ color: '#f8fafc', fontSize: '1rem', fontWeight: 700, marginBottom: '14px' }}>
+          Uploaded Database Photos ({Array.isArray(gallery) ? gallery.length : 0})
+        </h4>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '16px' }}>
+          {(gallery || []).map(p => (
+            <div
+              key={p._id || p.id}
+              style={{
+                background: 'rgba(30, 41, 59, 0.7)',
+                borderRadius: '10px',
+                border: '1px solid rgba(255, 255, 255, 0.08)',
+                overflow: 'hidden',
+                position: 'relative',
+              }}
+            >
+              <img
+                src={p.src}
+                alt={p.caption}
+                style={{ width: '100%', height: '140px', objectFit: 'cover', display: 'block' }}
+                onError={(e) => { e.currentTarget.style.display = 'none'; }}
+              />
+              <div style={{ padding: '10px' }}>
+                <div style={{ fontSize: '13px', fontWeight: 600, color: '#f8fafc', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                  {p.caption || 'Ignitron 2K25'}
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '6px' }}>
+                  <span style={{ fontSize: '11px', color: '#00D9FF', fontWeight: 700 }}>
+                    {p.year || '2K25'}
+                  </span>
+                  <button
+                    onClick={() => handleDeletePhoto(p._id || p.id, p.caption)}
+                    style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', padding: '2px' }}
+                    title="Delete photo"
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ==========================================
+// 13. TIMELINE SCHEDULE MANAGER (MongoDB Sync)
+// ==========================================
+function TimelineManager({ toast }) {
+  const { timeline, refreshTimeline, apiFetch } = useApp();
+  const [selectedDay, setSelectedDay] = useState('day1');
+  const [editing, setEditing] = useState(null);
+  const [saving, setSaving] = useState(false);
+  const [form, setForm] = useState({
+    day: 'day1',
+    time: '',
+    event: '',
+    tagline: '',
+    venue: '',
+    club: '',
+    rulebookLink: '',
+    registrationLink: '',
+  });
+
+  const resetForm = () => {
+    setForm({
+      day: selectedDay,
+      time: '',
+      event: '',
+      tagline: '',
+      venue: '',
+      club: '',
+      rulebookLink: '',
+      registrationLink: '',
+    });
+    setEditing(null);
+  };
+
+  const startEdit = (item) => {
+    setEditing(item._id || item.id);
+    setForm({
+      day: item.day || selectedDay,
+      time: item.time || '',
+      event: item.event || '',
+      tagline: item.tagline || '',
+      venue: item.venue || '',
+      club: item.club || '',
+      rulebookLink: item.rulebookLink || '',
+      registrationLink: item.registrationLink || '',
+    });
+    document.getElementById('timeline-form-card')?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  const handleSave = async () => {
+    if (!form.time.trim() || !form.event.trim()) {
+      toast('Please enter both Event Title and Time');
+      return;
+    }
+
+    setSaving(true);
+    try {
+      if (editing) {
+        const res = await apiFetch(`/api/timeline/${editing}`, {
+          method: 'PUT',
+          body: JSON.stringify({ ...form, day: selectedDay }),
+        });
+        if (res.ok) {
+          toast('Timeline schedule item updated and synced across all devices!');
+        } else {
+          toast('Failed to update timeline item');
+        }
+      } else {
+        const res = await apiFetch('/api/timeline', {
+          method: 'POST',
+          body: JSON.stringify({ ...form, day: selectedDay }),
+        });
+        if (res.ok) {
+          toast('New timeline event added to central schedule!');
+        } else {
+          toast('Failed to add timeline event');
+        }
+      }
+      await refreshTimeline();
+      resetForm();
+    } catch {
+      toast('Network error saving timeline item');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDelete = async (id, eventTitle) => {
+    if (window.confirm(`Delete "${eventTitle}" from timeline schedule?`)) {
+      try {
+        const res = await apiFetch(`/api/timeline/${id}`, { method: 'DELETE' });
+        if (res.ok) {
+          toast(`Deleted "${eventTitle}" from schedule across all devices`);
+          await refreshTimeline();
+        } else {
+          toast('Failed to delete timeline event');
+        }
+      } catch {
+        toast('Network error deleting timeline event');
+      }
+    }
+  };
+
+  const currentEvents = timeline?.[selectedDay] || [];
+
+  return (
+    <div>
+      {/* Day Selector */}
+      <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
+        {[
+          { key: 'day1', label: 'Day 1 · Dec 03' },
+          { key: 'day2', label: 'Day 2 · Dec 04' },
+          { key: 'day3', label: 'Day 3 · Dec 05' },
+        ].map(d => (
+          <button
+            key={d.key}
+            onClick={() => { setSelectedDay(d.key); setForm(prev => ({ ...prev, day: d.key })); setEditing(null); }}
+            style={{
+              padding: '8px 18px',
+              borderRadius: '8px',
+              border: '1px solid rgba(255,255,255,0.1)',
+              background: selectedDay === d.key ? 'rgba(0, 217, 255, 0.18)' : 'rgba(15, 23, 42, 0.6)',
+              color: selectedDay === d.key ? '#00D9FF' : '#94a3b8',
+              cursor: 'pointer',
+              fontWeight: 700,
+              fontSize: '13px',
+            }}
+          >
+            {d.label}
+          </button>
+        ))}
+      </div>
+
+      <div className="admin-form-card" id="timeline-form-card">
+        <h4 className="admin-form-title">{editing ? 'Edit Timeline Event' : `Add Event to ${selectedDay.toUpperCase()}`}</h4>
+        <div className="admin-form-grid">
+          <div className="form-group">
+            <label className="form-label">Event Name *</label>
+            <input className="form-input" value={form.event} onChange={e => setForm({ ...form, event: e.target.value })} placeholder="e.g. Code Rush – 24 Hours Hackathon" />
+          </div>
+          <div className="form-group">
+            <label className="form-label">Time Slot *</label>
+            <input className="form-input" value={form.time} onChange={e => setForm({ ...form, time: e.target.value })} placeholder="e.g. 02:00 PM – 05:00 PM" />
+          </div>
+          <div className="form-group">
+            <label className="form-label">Venue</label>
+            <input className="form-input" value={form.venue} onChange={e => setForm({ ...form, venue: e.target.value })} placeholder="e.g. Central Library / Auditorium" />
+          </div>
+          <div className="form-group">
+            <label className="form-label">Club / Department</label>
+            <input className="form-input" value={form.club} onChange={e => setForm({ ...form, club: e.target.value })} placeholder="e.g. Computer Science / Robotics" />
+          </div>
+          <div className="form-group">
+            <label className="form-label">Tagline / Short Summary</label>
+            <input className="form-input" value={form.tagline} onChange={e => setForm({ ...form, tagline: e.target.value })} placeholder="Brief 1-line event summary" />
+          </div>
+          <div className="form-group">
+            <label className="form-label">Rulebook Link (Google Drive)</label>
+            <input className="form-input" value={form.rulebookLink} onChange={e => setForm({ ...form, rulebookLink: e.target.value })} placeholder="https://drive.google.com/..." />
+          </div>
+          <div className="form-group" style={{ gridColumn: 'span 2' }}>
+            <label className="form-label">Unstop / Registration Link</label>
+            <input className="form-input" value={form.registrationLink} onChange={e => setForm({ ...form, registrationLink: e.target.value })} placeholder="https://unstop.com/p/..." />
+          </div>
+        </div>
+        <div style={{ display: 'flex', gap: '8px', marginTop: '14px' }}>
+          <button className="btn-admin-save" onClick={handleSave} disabled={saving}>
+            <Save size={16} /> {saving ? 'Saving...' : 'Save Timeline Event'}
+          </button>
+          {editing && <button className="btn-admin-cancel" onClick={resetForm}><X size={16} /> Cancel</button>}
+        </div>
+      </div>
+
+      <div className="admin-list" style={{ marginTop: '20px' }}>
+        {currentEvents.map((item, idx) => (
+          <div className="admin-list-item" key={item._id || item.id || idx} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
+            <div className="admin-list-info">
+              <div className="admin-list-name" style={{ color: '#f8fafc' }}>{item.event}</div>
+              <div className="admin-list-meta">
+                <span style={{ color: '#00D9FF', fontWeight: 600 }}>{item.time}</span>
+                {item.venue && <span>📍 {item.venue}</span>}
+                {item.club && <span style={{ color: '#34d399' }}>[{item.club}]</span>}
+              </div>
+            </div>
+            <div className="admin-list-actions">
+              <button className="btn-edit" onClick={() => startEdit(item)} title="Edit Event"><Edit3 size={15} /></button>
+              <button className="btn-delete" onClick={() => handleDelete(item._id || item.id, item.event)} title="Delete Event"><Trash2 size={15} /></button>
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
@@ -1790,6 +2412,9 @@ export default function AdminDashboard() {
     { id: 'events', label: 'Events & Rules', icon: <Calendar size={18} /> },
     { id: 'scoreboard', label: 'Scoreboard Standings', icon: <Trophy size={18} /> },
     { id: 'team', label: 'Organizers / Crew', icon: <Users size={18} /> },
+    { id: 'timeline', label: 'Timeline Schedule', icon: <Clock size={18} /> },
+    { id: 'gallery', label: 'Gallery Management', icon: <Folder size={18} /> },
+    { id: 'accommodation', label: 'Accommodation Link', icon: <Hotel size={18} /> },
     { id: 'countdown', label: 'Countdown Timer', icon: <Clock size={18} /> },
     { id: 'brochure', label: 'Brochure Link', icon: <Link size={18} /> },
   ];
@@ -1891,6 +2516,9 @@ export default function AdminDashboard() {
           {activeTab === 'events' && <EventsManager toast={showToast} />}
           {activeTab === 'scoreboard' && <ScoreboardManager toast={showToast} />}
           {activeTab === 'team' && <TeamManager toast={showToast} />}
+          {activeTab === 'timeline' && <TimelineManager toast={showToast} />}
+          {activeTab === 'gallery' && <GalleryManager toast={showToast} />}
+          {activeTab === 'accommodation' && <AccommodationManager toast={showToast} />}
           {activeTab === 'countdown' && <CountdownManager toast={showToast} />}
           {activeTab === 'brochure' && <BrochureManager toast={showToast} />}
         </div>

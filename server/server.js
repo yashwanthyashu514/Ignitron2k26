@@ -9,7 +9,17 @@ import { connectDB } from './config/db.js';
 import { User } from './models/User.js';
 import { Event } from './models/Event.js';
 import { Scoreboard } from './models/Scoreboard.js';
-import { defaultEvents } from '../src/data/initialData.js';
+import { TeamMember } from './models/TeamMember.js';
+import { Timeline } from './models/Timeline.js';
+import { SiteSettings } from './models/SiteSettings.js';
+import { Gallery } from './models/Gallery.js';
+import {
+  defaultEvents,
+  defaultTeamMembers,
+  defaultTimeline,
+  defaultCountdown,
+  defaultBrochureLink,
+} from '../src/data/initialData.js';
 
 import authRoutes from './routes/auth.js';
 import coordinatorRoutes from './routes/coordinators.js';
@@ -19,6 +29,11 @@ import submissionRoutes from './routes/submissions.js';
 import scoreboardRoutes from './routes/scoreboard.js';
 import auditLogRoutes from './routes/auditLogs.js';
 import overviewRoutes from './routes/overview.js';
+import teamMemberRoutes from './routes/team.js';
+import timelineRoutes from './routes/timeline.js';
+import settingsRoutes from './routes/settings.js';
+import galleryRoutes from './routes/gallery.js';
+import uploadRoutes from './routes/upload.js';
 
 dotenv.config();
 
@@ -35,7 +50,8 @@ app.use(cors({
   origin: allowedOrigins,
   credentials: true,
 }));
-app.use(express.json());
+app.use(express.json({ limit: '25mb' }));
+app.use(express.urlencoded({ extended: true, limit: '25mb' }));
 
 // ── API Routes ────────────────────────────────────────────────────────────────
 app.use('/api/auth', authRoutes);
@@ -46,6 +62,11 @@ app.use('/api/submissions', submissionRoutes);
 app.use('/api/scoreboard', scoreboardRoutes);
 app.use('/api/audit-logs', auditLogRoutes);
 app.use('/api/overview', overviewRoutes);
+app.use('/api/team', teamMemberRoutes);
+app.use('/api/timeline', timelineRoutes);
+app.use('/api/settings', settingsRoutes);
+app.use('/api/gallery', galleryRoutes);
+app.use('/api/upload', uploadRoutes);
 
 app.get('/api/health', (req, res) => {
   res.json({
@@ -151,6 +172,79 @@ async function seedInitialData() {
         { collegeName: 'Manipal Institute',score: 0 },
       ]);
       console.log('[Seed] Default scoreboard initialized');
+    }
+
+    // 4. Initial Team Members in MongoDB
+    const teamCount = await TeamMember.countDocuments();
+    if (teamCount === 0) {
+      const teamDocs = defaultTeamMembers.map((m, idx) => ({
+        id: m.id || `member_${idx + 1}`,
+        name: m.name,
+        role: m.role,
+        category: m.category === 'organizer' ? 'organizer' : 'core',
+        org: m.org || 'GM University',
+        photo: m.photo || '',
+        order: idx,
+      }));
+      await TeamMember.insertMany(teamDocs);
+      console.log(`[Seed] Initialized ${teamDocs.length} team members`);
+    }
+
+    // 5. Initial Timeline in MongoDB
+    const timelineCount = await Timeline.countDocuments();
+    if (timelineCount === 0) {
+      const timeDocs = [];
+      for (const day of ['day1', 'day2', 'day3']) {
+        const events = defaultTimeline[day] || [];
+        events.forEach((ev, idx) => {
+          timeDocs.push({
+            day,
+            time: ev.time,
+            event: ev.event,
+            tagline: ev.tagline || '',
+            venue: ev.venue || '',
+            club: ev.club || '',
+            rulebookLink: ev.rulebookLink || '',
+            registrationLink: ev.registrationLink || '',
+            order: idx,
+          });
+        });
+      }
+      if (timeDocs.length > 0) {
+        await Timeline.insertMany(timeDocs);
+        console.log(`[Seed] Initialized ${timeDocs.length} timeline events`);
+      }
+    }
+
+    // 6. Global Site Settings
+    const settingsCount = await SiteSettings.countDocuments({ key: 'global' });
+    if (settingsCount === 0) {
+      await SiteSettings.create({
+        key: 'global',
+        countdown: defaultCountdown || '2026-12-03T09:00:00',
+        brochureLink: defaultBrochureLink || 'https://drive.google.com/file/ignitron2k26-brochure',
+        accommodationLink: 'https://accomadation.vercel.app/',
+        announcements: '',
+      });
+      console.log('[Seed] Initialized global site settings');
+    }
+
+    // 7. Initial Gallery
+    const galleryCount = await Gallery.countDocuments();
+    if (galleryCount === 0) {
+      const gDocs = [];
+      for (let i = 1; i <= 19; i++) {
+        const num = String(i).padStart(2, '0');
+        gDocs.push({
+          src: `/gallery/${num}.jpg`,
+          caption: `Ignitron 2K25 Highlights #${i}`,
+          year: '2K25',
+          isHomeFeatured: true,
+          order: i,
+        });
+      }
+      await Gallery.insertMany(gDocs);
+      console.log(`[Seed] Initialized ${gDocs.length} gallery items`);
     }
 
     console.log('[Seed] Database ready ✓');

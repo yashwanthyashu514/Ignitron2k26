@@ -36,15 +36,23 @@ function GalleryCardImage({ item }) {
           <span className="gallery-loader-text">Loading 2K25...</span>
         </div>
       )}
-      <img
-        src={currentSrc}
-        alt={item.title}
-        draggable="false"
-        loading="lazy"
-        onLoad={() => setLoaded(true)}
-        onError={handleError}
-        className={`gallery-card-img ${loaded ? 'is-loaded' : 'is-loading'}`}
-      />
+      {hasError ? (
+        <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'radial-gradient(circle, rgba(0,217,255,0.12), rgba(15,23,42,0.95))', color: '#00D9FF' }}>
+          <span style={{ fontSize: '32px' }}>⚡</span>
+          <span style={{ fontSize: '13px', fontWeight: 800, letterSpacing: '1.5px', marginTop: '8px', color: '#f8fafc' }}>IGNITRON 2K25</span>
+          <span style={{ fontSize: '11px', color: '#00D9FF', letterSpacing: '1px' }}>MEMORIES</span>
+        </div>
+      ) : (
+        <img
+          src={currentSrc}
+          alt={item.title}
+          draggable="false"
+          loading="lazy"
+          onLoad={() => setLoaded(true)}
+          onError={handleError}
+          className={`gallery-card-img ${loaded ? 'is-loaded' : 'is-loading'}`}
+        />
+      )}
       <div className="gallery-card-overlay">
         <span>MEMORIES · {item.year}</span>
         <h3>{item.title}</h3>

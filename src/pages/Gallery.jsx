@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { X, ChevronLeft, ChevronRight, Images, ZoomIn } from 'lucide-react';
+import { useApp } from '../context/AppContext';
 
 const PHOTOS_2K25 = [
   "DSC_0006.JPG",
@@ -155,10 +156,54 @@ function LightboxImage({ src, alt }) {
 }
 
 export default function Gallery() {
+  const { gallery } = useApp();
   const [lightbox, setLightbox] = useState(null); // { sectionIdx, photoIdx }
 
+  const gallerySections = useMemo(() => {
+    const base = [
+      {
+        year: '2K25',
+        label: 'Ignitron 2K25',
+        color: '#00D9FF',
+        photos: PHOTOS_2K25.map((file, idx) => ({
+          src: `/gallery/2k25/${encodeURI(file)}`,
+          caption: `Ignitron 2K25 Highlights #${idx + 1}`,
+        })),
+      },
+    ];
+
+    if (Array.isArray(gallery) && gallery.length > 0) {
+      // Dynamic photos uploaded from Admin
+      const dynamic2k25 = gallery
+        .filter(g => (!g.year || g.year === '2K25') && !g.src.startsWith('/gallery/0') && !g.src.startsWith('/gallery/1'))
+        .map(g => ({
+          src: g.src,
+          caption: g.caption || 'Ignitron 2K25 Highlights',
+        }));
+
+      if (dynamic2k25.length > 0) {
+        base[0].photos = [...dynamic2k25, ...base[0].photos];
+      }
+
+      const dynamic2k26 = gallery.filter(g => g.year === '2K26').map(g => ({
+        src: g.src,
+        caption: g.caption || 'Ignitron 2K26 Highlights',
+      }));
+
+      if (dynamic2k26.length > 0) {
+        base.push({
+          year: '2K26',
+          label: 'Ignitron 2K26',
+          color: '#00E676',
+          photos: dynamic2k26,
+        });
+      }
+    }
+    return base;
+  }, [gallery]);
+
   const allPhotos = lightbox !== null
-    ? GALLERY_DATA[lightbox.sectionIdx].photos
+    ? gallerySections[lightbox.sectionIdx]?.photos || []
     : [];
 
   const openLightbox = (sectionIdx, photoIdx) => setLightbox({ sectionIdx, photoIdx });
@@ -207,7 +252,7 @@ export default function Gallery() {
       </div>
 
       {/* Sections */}
-      {GALLERY_DATA.map((section, sectionIdx) => (
+      {gallerySections.map((section, sectionIdx) => (
         <section key={section.year} className="gallery-section">
           <div className="section-header">
             <div className="section-badge" style={{ color: section.color, borderColor: section.color + '44' }}>

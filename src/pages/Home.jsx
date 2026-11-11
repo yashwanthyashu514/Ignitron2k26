@@ -20,15 +20,7 @@ export default function Home() {
     }
   });
 
-  const galleryImages = [
-    '/gallery/01.jpg',
-    '/gallery/02.jpg',
-    '/gallery/03.jpg',
-    '/gallery/04.jpg',
-    '/gallery/05.jpg',
-    '/gallery/06.jpg',
-    '/gallery/07.jpg',
-  ];
+  const galleryImages = Array.from({ length: 19 }, (_, i) => `/gallery/${String(i + 1).padStart(2, '0')}.jpg`);
 
   const filteredEvents = activeDay === 'All'
     ? events
