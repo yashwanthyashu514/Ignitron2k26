@@ -3,12 +3,16 @@ import { Timeline } from '../models/Timeline.js';
 import { verifyToken, requireSuperAdmin } from '../middleware/auth.js';
 import { logAudit } from '../utils/logger.js';
 import { defaultTimeline } from '../../src/data/initialData.js';
+import { getCached, setCached, invalidateCache } from '../utils/cache.js';
 
 const router = express.Router();
 
 // GET /api/timeline — Public
 router.get('/', async (req, res) => {
   try {
+    const cached = getCached('timeline:all');
+    if (cached) return res.json(cached);
+
     let count = await Timeline.countDocuments();
     if (count === 0) {
       // Auto-seed from defaultTimeline
@@ -42,7 +46,9 @@ router.get('/', async (req, res) => {
       }
     }
 
-    res.json({ timeline: grouped, raw: items });
+    const payload = { timeline: grouped, raw: items };
+    setCached('timeline:all', payload, 30000);
+    res.json(payload);
   } catch (err) {
     res.status(500).json({ error: 'Failed to fetch timeline', details: err.message });
   }
@@ -78,6 +84,7 @@ router.post('/', verifyToken, requireSuperAdmin, async (req, res) => {
       newValue: item,
     });
 
+    invalidateCache('timeline');
     res.status(201).json(item);
   } catch (err) {
     res.status(500).json({ error: 'Failed to add timeline event', details: err.message });
@@ -106,6 +113,7 @@ router.put('/:id', verifyToken, requireSuperAdmin, async (req, res) => {
     if (order !== undefined) item.order = Number(order);
 
     await item.save();
+    invalidateCache('timeline');
 
     await logAudit({
       userId: req.user._id,
@@ -139,6 +147,7 @@ router.delete('/:id', verifyToken, requireSuperAdmin, async (req, res) => {
       description: `Deleted timeline item "${item.event}"`,
     });
 
+    invalidateCache('timeline');
     res.json({ success: true, message: `Deleted "${item.event}"` });
   } catch (err) {
     res.status(500).json({ error: 'Failed to delete timeline event', details: err.message });

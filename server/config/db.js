@@ -22,8 +22,12 @@ export async function connectDB() {
 
   if (!cached.promise) {
     const opts = {
-      bufferCommands: false,
-      serverSelectionTimeoutMS: 5000,
+      bufferCommands: true,
+      serverSelectionTimeoutMS: 15000,
+      connectTimeoutMS: 15000,
+      socketTimeoutMS: 45000,
+      maxPoolSize: 10,
+      family: 4,
     };
 
     console.log(`[MongoDB] Connecting to: ${uri.replace(/:([^:@]+)@/, ':****@')}`);

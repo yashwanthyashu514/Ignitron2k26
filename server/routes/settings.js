@@ -3,12 +3,16 @@ import { SiteSettings } from '../models/SiteSettings.js';
 import { verifyToken, requireSuperAdmin } from '../middleware/auth.js';
 import { logAudit } from '../utils/logger.js';
 import { defaultCountdown, defaultBrochureLink } from '../../src/data/initialData.js';
+import { getCached, setCached, invalidateCache } from '../utils/cache.js';
 
 const router = express.Router();
 
 // GET /api/settings — Public
 router.get('/', async (req, res) => {
   try {
+    const cached = getCached('settings:global');
+    if (cached) return res.json(cached);
+
     let settings = await SiteSettings.findOne({ key: 'global' }).lean();
     if (!settings) {
       settings = await SiteSettings.create({
@@ -19,6 +23,7 @@ router.get('/', async (req, res) => {
         announcements: '',
       });
     }
+    setCached('settings:global', settings, 30000);
     res.json(settings);
   } catch (err) {
     res.status(500).json({ error: 'Failed to fetch settings', details: err.message });
@@ -40,6 +45,7 @@ router.put('/', verifyToken, requireSuperAdmin, async (req, res) => {
     if (announcements !== undefined) settings.announcements = announcements.trim();
 
     await settings.save();
+    invalidateCache('settings');
 
     await logAudit({
       userId: req.user._id,

@@ -1,8 +1,9 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { motion } from "framer-motion";
+import { useApp } from "../context/AppContext";
 import "./Gallery.css";
 
-const galleryData = Array.from({ length: 19 }, (_, i) => {
+const defaultGalleryData = Array.from({ length: 19 }, (_, i) => {
   const num = String(i + 1).padStart(2, "0");
   return {
     id: i + 1,
@@ -62,11 +63,26 @@ function GalleryCardImage({ item }) {
 }
 
 export default function Gallery() {
+  const { gallery } = useApp();
   const [active, setActive] = useState(0);
   const [paused, setPaused] = useState(false);
   const [isInView, setIsInView] = useState(true);
   const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth <= 640);
   const sectionRef = React.useRef(null);
+
+  const displayItems = useMemo(() => {
+    if (Array.isArray(gallery) && gallery.length > 0) {
+      const featured = gallery.filter(g => g.isHomeFeatured);
+      const list = featured.length > 0 ? featured : gallery;
+      return list.map((g, i) => ({
+        id: g._id || g.id || i + 1,
+        image: g.src,
+        title: g.caption || 'Ignitron 2K25',
+        year: g.year || '2K25',
+      }));
+    }
+    return defaultGalleryData;
+  }, [gallery]);
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth <= 640);
@@ -89,14 +105,14 @@ export default function Gallery() {
     Automatic movement (only when visible)
   */
   useEffect(() => {
-    if (paused || !isInView) return;
+    if (paused || !isInView || displayItems.length === 0) return;
 
     const timer = setInterval(() => {
-      setActive((prev) => (prev + 1) % galleryData.length);
+      setActive((prev) => (prev + 1) % displayItems.length);
     }, 2800);
 
     return () => clearInterval(timer);
-  }, [paused, isInView]);
+  }, [paused, isInView, displayItems.length]);
 
   /*
     Calculate card position relative
@@ -104,7 +120,7 @@ export default function Gallery() {
   */
   const getPosition = (index) => {
     let diff = index - active;
-    const total = galleryData.length;
+    const total = displayItems.length;
 
     if (diff > total / 2) {
       diff -= total;
@@ -143,7 +159,7 @@ export default function Gallery() {
 
       <div className="gallery-stage">
         <div className="gallery-track">
-          {galleryData.map((item, index) => {
+          {displayItems.map((item, index) => {
             const position = getPosition(index);
             const isCenter = position === 0;
 
@@ -204,7 +220,7 @@ export default function Gallery() {
         <button
           onClick={() =>
             setActive(
-              (active - 1 + galleryData.length) % galleryData.length
+              (active - 1 + displayItems.length) % displayItems.length
             )
           }
           aria-label="Previous image"
@@ -215,12 +231,12 @@ export default function Gallery() {
         <div className="gallery-counter">
           <span>{String(active + 1).padStart(2, "0")}</span>
           <div className="counter-line" />
-          <span>{String(galleryData.length).padStart(2, "0")}</span>
+          <span>{String(displayItems.length).padStart(2, "0")}</span>
         </div>
 
         <button
           onClick={() =>
-            setActive((active + 1) % galleryData.length)
+            setActive((active + 1) % displayItems.length)
           }
           aria-label="Next image"
         >

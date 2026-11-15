@@ -41,17 +41,49 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// ── Middleware ────────────────────────────────────────────────────────────────
-const allowedOrigins = process.env.ALLOWED_ORIGINS
-  ? process.env.ALLOWED_ORIGINS.split(',').map(s => s.trim())
-  : '*';
-
-app.use(cors({
-  origin: allowedOrigins,
+// ── Middleware & CORS ────────────────────────────────────────────────────────
+const corsOptions = {
+  origin: (origin, callback) => {
+    // Allow non-browser agents (cURL, Postman, mobile native apps)
+    if (!origin) return callback(null, true);
+    // Explicitly echo the origin to satisfy W3C credentialed CORS specifications
+    return callback(null, origin);
+  },
   credentials: true,
-}));
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin', 'Cache-Control', 'Pragma'],
+  exposedHeaders: ['Content-Range', 'X-Content-Range'],
+  maxAge: 86400,
+};
+
+app.use(cors(corsOptions));
+
 app.use(express.json({ limit: '25mb' }));
 app.use(express.urlencoded({ extended: true, limit: '25mb' }));
+
+// ── Strict No-Cache & Database Readiness Middleware for All API Routes ───────
+// Prevents Vercel Edge CDN, proxies, and mobile browser caches from serving stale data
+app.use('/api', async (req, res, next) => {
+  res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+  res.set('Pragma', 'no-cache');
+  res.set('Expires', '0');
+  res.set('Surrogate-Control', 'no-store');
+
+  if (req.path === '/health') return next();
+
+  try {
+    if (mongoose.connection.readyState !== 1) {
+      await connectDB();
+    }
+    next();
+  } catch (err) {
+    console.error(`[DB Connect Error on ${req.path}]`, err.message);
+    return res.status(503).json({
+      error: 'Database connection in progress. Please retry in a few seconds.',
+      details: err.message,
+    });
+  }
+});
 
 // ── API Routes ────────────────────────────────────────────────────────────────
 app.use('/api/auth', authRoutes);
@@ -255,20 +287,28 @@ async function seedInitialData() {
 
 // ── Start ─────────────────────────────────────────────────────────────────────
 async function startServer() {
-  try {
-    await connectDB();
-    await seedInitialData();
-  } catch (err) {
-    console.warn('[MongoDB] Initial connection delayed or offline. Server will start and reconnect on demand:', err.message);
-  }
-
-  app.listen(PORT, () => {
+  const server = app.listen(PORT, () => {
     console.log(`\n╔════════════════════════════════════════╗`);
     console.log(`║  IGNITRON 2K26  –  Backend API Server  ║`);
     console.log(`╚════════════════════════════════════════╝`);
     console.log(`  🚀  http://localhost:${PORT}`);
     console.log(`  📊  API Health: http://localhost:${PORT}/api/health\n`);
   });
+
+  server.on('error', (err) => {
+    if (err.code === 'EADDRINUSE') {
+      console.error(`[Server] Port ${PORT} is already in use. Please terminate the existing process or choose another port.`);
+    } else {
+      console.error('[Server] Fatal startup error:', err.message);
+    }
+  });
+
+  try {
+    await connectDB();
+    await seedInitialData();
+  } catch (err) {
+    console.warn('[MongoDB] Initial connection delayed or offline. Server will reconnect on demand:', err.message);
+  }
 }
 
 // When running on local dev or Render, start standalone HTTP server.

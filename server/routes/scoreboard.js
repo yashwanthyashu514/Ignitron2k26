@@ -2,12 +2,16 @@ import express from 'express';
 import { Scoreboard } from '../models/Scoreboard.js';
 import { verifyToken, requireSuperAdmin } from '../middleware/auth.js';
 import { logActivity } from '../utils/logger.js';
+import { getCached, setCached, invalidateCache } from '../utils/cache.js';
 
 const router = express.Router();
 
 // 1. GET public scoreboard (Only approved results)
 router.get('/', async (req, res) => {
   try {
+    const cached = getCached('scoreboard:public');
+    if (cached) return res.json(cached);
+
     const list = await Scoreboard.find().sort({ score: -1, collegeName: 1 }).lean();
     // Transform to include id for frontend compatibility
     const formatted = list.map(item => ({
@@ -17,6 +21,7 @@ router.get('/', async (req, res) => {
       eventWins: item.eventWins || [],
       updatedAt: item.updatedAt,
     }));
+    setCached('scoreboard:public', formatted, 15000);
     res.json(formatted);
   } catch (err) {
     console.error('[Scoreboard API] Error reading scoreboard:', err.message);
@@ -51,6 +56,8 @@ router.post('/', verifyToken, requireSuperAdmin, async (req, res) => {
       await entry.save();
     }
 
+    invalidateCache('scoreboard');
+
     const clientIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress || '127.0.0.1';
     await logActivity({
       coordinatorId: req.user._id.toString(),
@@ -77,6 +84,7 @@ router.delete('/:id', verifyToken, requireSuperAdmin, async (req, res) => {
   try {
     const entry = await Scoreboard.findByIdAndDelete(req.params.id);
     if (!entry) return res.status(404).json({ error: 'Entry not found' });
+    invalidateCache('scoreboard');
 
     const clientIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress || '127.0.0.1';
     await logActivity({

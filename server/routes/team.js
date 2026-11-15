@@ -1,14 +1,30 @@
 import express from 'express';
+import mongoose from 'mongoose';
+import { v2 as cloudinary } from 'cloudinary';
 import { TeamMember } from '../models/TeamMember.js';
 import { verifyToken, requireSuperAdmin } from '../middleware/auth.js';
 import { logAudit } from '../utils/logger.js';
 import { defaultTeamMembers } from '../../src/data/initialData.js';
+import { getCached, setCached, invalidateCache } from '../utils/cache.js';
 
 const router = express.Router();
+
+function buildMemberFilter(param) {
+  const isObj = mongoose.isValidObjectId(param);
+  return {
+    $or: [
+      { id: param },
+      ...(isObj ? [{ _id: param }] : []),
+    ],
+  };
+}
 
 // GET /api/team — Public
 router.get('/', async (req, res) => {
   try {
+    const cached = getCached('team:all');
+    if (cached) return res.json(cached);
+
     let members = await TeamMember.find().sort({ order: 1, createdAt: 1 }).lean();
     if (members.length === 0) {
       // Auto-seed if database collection is empty
@@ -24,6 +40,7 @@ router.get('/', async (req, res) => {
       await TeamMember.insertMany(docs);
       members = await TeamMember.find().sort({ order: 1, createdAt: 1 }).lean();
     }
+    setCached('team:all', members, 30000);
     res.json(members);
   } catch (err) {
     res.status(500).json({ error: 'Failed to fetch team members', details: err.message });
@@ -61,6 +78,7 @@ router.post('/', verifyToken, requireSuperAdmin, async (req, res) => {
       newValue: member,
     });
 
+    invalidateCache('team');
     res.status(201).json(member);
   } catch (err) {
     res.status(500).json({ error: 'Failed to add team member', details: err.message });
@@ -73,7 +91,7 @@ router.put('/:id', verifyToken, requireSuperAdmin, async (req, res) => {
     const { id } = req.params;
     const { name, role, category, org, photo, cloudinaryPublicId, order } = req.body;
 
-    const member = await TeamMember.findOne({ id });
+    const member = await TeamMember.findOne(buildMemberFilter(id));
     if (!member) {
       return res.status(404).json({ error: 'Team member not found' });
     }
@@ -87,6 +105,7 @@ router.put('/:id', verifyToken, requireSuperAdmin, async (req, res) => {
     if (order !== undefined) member.order = Number(order);
 
     await member.save();
+    invalidateCache('team');
 
     await logAudit({
       userId: req.user._id,
@@ -107,9 +126,28 @@ router.put('/:id', verifyToken, requireSuperAdmin, async (req, res) => {
 router.delete('/:id', verifyToken, requireSuperAdmin, async (req, res) => {
   try {
     const { id } = req.params;
-    const member = await TeamMember.findOneAndDelete({ id });
+    const member = await TeamMember.findOneAndDelete(buildMemberFilter(id));
     if (!member) {
       return res.status(404).json({ error: 'Team member not found' });
+    }
+    invalidateCache('team');
+
+    if (member.cloudinaryPublicId && (process.env.CLOUDINARY_API_KEY || process.env.CLOUDINARY_URL)) {
+      try {
+        if (process.env.CLOUDINARY_URL) {
+          cloudinary.config({ secure: true });
+        } else {
+          cloudinary.config({
+            cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+            api_key: process.env.CLOUDINARY_API_KEY,
+            api_secret: process.env.CLOUDINARY_API_SECRET,
+            secure: true,
+          });
+        }
+        await cloudinary.uploader.destroy(member.cloudinaryPublicId);
+      } catch (cErr) {
+        console.warn('[Cloudinary] Failed to delete remote team photo:', cErr.message);
+      }
     }
 
     await logAudit({

@@ -3,12 +3,16 @@ import { Gallery } from '../models/Gallery.js';
 import { verifyToken, requireSuperAdmin } from '../middleware/auth.js';
 import { logAudit } from '../utils/logger.js';
 import { v2 as cloudinary } from 'cloudinary';
+import { getCached, setCached, invalidateCache } from '../utils/cache.js';
 
 const router = express.Router();
 
 // GET /api/gallery — Public
 router.get('/', async (req, res) => {
   try {
+    const cached = getCached('gallery:all');
+    if (cached) return res.json(cached);
+
     let photos = await Gallery.find().sort({ order: 1, createdAt: 1 }).lean();
     if (photos.length === 0) {
       // Auto-seed default 19 photos
@@ -26,6 +30,7 @@ router.get('/', async (req, res) => {
       await Gallery.insertMany(docs);
       photos = await Gallery.find().sort({ order: 1, createdAt: 1 }).lean();
     }
+    setCached('gallery:all', photos, 30000);
     res.json(photos);
   } catch (err) {
     res.status(500).json({ error: 'Failed to fetch gallery', details: err.message });
@@ -59,6 +64,7 @@ router.post('/', verifyToken, requireSuperAdmin, async (req, res) => {
       newValue: photo,
     });
 
+    invalidateCache('gallery');
     res.status(201).json(photo);
   } catch (err) {
     res.status(500).json({ error: 'Failed to add gallery photo', details: err.message });
@@ -75,8 +81,18 @@ router.delete('/:id', verifyToken, requireSuperAdmin, async (req, res) => {
     }
 
     // If photo was stored in Cloudinary, delete from Cloudinary as well
-    if (photo.cloudinaryPublicId && process.env.CLOUDINARY_API_KEY) {
+    if (photo.cloudinaryPublicId && (process.env.CLOUDINARY_API_KEY || process.env.CLOUDINARY_URL)) {
       try {
+        if (process.env.CLOUDINARY_URL) {
+          cloudinary.config({ secure: true });
+        } else {
+          cloudinary.config({
+            cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+            api_key: process.env.CLOUDINARY_API_KEY,
+            api_secret: process.env.CLOUDINARY_API_SECRET,
+            secure: true,
+          });
+        }
         await cloudinary.uploader.destroy(photo.cloudinaryPublicId);
       } catch (cErr) {
         console.warn('[Cloudinary] Failed to delete remote asset:', cErr.message);
@@ -91,6 +107,7 @@ router.delete('/:id', verifyToken, requireSuperAdmin, async (req, res) => {
       description: `Removed gallery photo "${photo.caption}"`,
     });
 
+    invalidateCache('gallery');
     res.json({ success: true, message: 'Photo deleted successfully' });
   } catch (err) {
     res.status(500).json({ error: 'Failed to delete gallery photo', details: err.message });

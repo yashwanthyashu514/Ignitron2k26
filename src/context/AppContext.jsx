@@ -7,6 +7,7 @@ import {
   defaultCountdown,
   defaultBrochureLink,
 } from '../data/initialData';
+import { buildApiUrl } from '../utils/apiConfig';
 
 const AppContext = createContext(null);
 
@@ -28,6 +29,7 @@ function saveToStorage(key, value) {
 }
 
 export function AppProvider({ children }) {
+  // Authoritative State with local cache for instant initial painting
   const [events, setEventsState] = useState(() => {
     const raw = loadFromStorage('ignitron_events_v7', defaultEvents);
     return Array.isArray(raw) ? raw.map(({ prize, fee, price, ...rest }) => rest) : defaultEvents;
@@ -61,11 +63,12 @@ export function AppProvider({ children }) {
       return;
     }
 
-    fetch('/api/auth/me', {
+    fetch(buildApiUrl('/api/auth/me'), {
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${token}`,
       },
+      cache: 'no-store',
     })
       .then(async (res) => {
         if (!res.ok) {
@@ -103,23 +106,23 @@ export function AppProvider({ children }) {
   // Fetch Public Live Scoreboard from MongoDB Backend
   const refreshScoreboard = useCallback(async () => {
     try {
-      const res = await fetch('/api/scoreboard');
+      const res = await fetch(buildApiUrl('/api/scoreboard'), { cache: 'no-store' });
       if (res.ok) {
         const data = await res.json();
-        if (Array.isArray(data) && data.length > 0) {
+        if (Array.isArray(data)) {
           setScoreboardState(data);
           saveToStorage('ignitron_scoreboard', data);
         }
       }
     } catch {
-      // Offline fallback
+      // Offline fallback preserved
     }
   }, []);
 
   // Fetch Events from MongoDB Backend
   const refreshEvents = useCallback(async () => {
     try {
-      const res = await fetch('/api/events');
+      const res = await fetch(buildApiUrl('/api/events'), { cache: 'no-store' });
       if (res.ok) {
         const data = await res.json();
         if (Array.isArray(data) && data.length > 0) {
@@ -128,14 +131,14 @@ export function AppProvider({ children }) {
         }
       }
     } catch {
-      // Offline fallback
+      // Offline fallback preserved
     }
   }, []);
 
   // Fetch Team Members from MongoDB Backend
   const refreshTeamMembers = useCallback(async () => {
     try {
-      const res = await fetch('/api/team');
+      const res = await fetch(buildApiUrl('/api/team'), { cache: 'no-store' });
       if (res.ok) {
         const data = await res.json();
         if (Array.isArray(data) && data.length > 0) {
@@ -144,14 +147,14 @@ export function AppProvider({ children }) {
         }
       }
     } catch {
-      // Offline fallback
+      // Offline fallback preserved
     }
   }, []);
 
   // Fetch Timeline from MongoDB Backend
   const refreshTimeline = useCallback(async () => {
     try {
-      const res = await fetch('/api/timeline');
+      const res = await fetch(buildApiUrl('/api/timeline'), { cache: 'no-store' });
       if (res.ok) {
         const data = await res.json();
         if (data && data.timeline) {
@@ -160,14 +163,14 @@ export function AppProvider({ children }) {
         }
       }
     } catch {
-      // Offline fallback
+      // Offline fallback preserved
     }
   }, []);
 
   // Fetch Global Settings (Countdown, Brochure, Accommodation) from MongoDB Backend
   const refreshSettings = useCallback(async () => {
     try {
-      const res = await fetch('/api/settings');
+      const res = await fetch(buildApiUrl('/api/settings'), { cache: 'no-store' });
       if (res.ok) {
         const data = await res.json();
         if (data.countdown) {
@@ -184,14 +187,14 @@ export function AppProvider({ children }) {
         }
       }
     } catch {
-      // Offline fallback
+      // Offline fallback preserved
     }
   }, []);
 
   // Fetch Gallery Photos from MongoDB Backend
   const refreshGallery = useCallback(async () => {
     try {
-      const res = await fetch('/api/gallery');
+      const res = await fetch(buildApiUrl('/api/gallery'), { cache: 'no-store' });
       if (res.ok) {
         const data = await res.json();
         if (Array.isArray(data) && data.length > 0) {
@@ -200,12 +203,20 @@ export function AppProvider({ children }) {
         }
       }
     } catch {
-      // Offline fallback
+      // Offline fallback preserved
     }
   }, []);
 
+  const lastRefreshRef = useRef(0);
+
   // Unified Refresh All function across all devices
-  const refreshAll = useCallback(async () => {
+  const refreshAll = useCallback(async (force = false) => {
+    const now = Date.now();
+    if (!force && now - lastRefreshRef.current < 15000) {
+      return; // Throttled to prevent Atlas connection saturation
+    }
+    lastRefreshRef.current = now;
+
     await Promise.allSettled([
       refreshEvents(),
       refreshScoreboard(),
@@ -216,32 +227,48 @@ export function AppProvider({ children }) {
     ]);
   }, [refreshEvents, refreshScoreboard, refreshTeamMembers, refreshTimeline, refreshSettings, refreshGallery]);
 
-  // Live Auto-Refresh & Cross-Device Revalidation Interval
+  // Live Auto-Refresh & Cross-Device Revalidation
   useEffect(() => {
-    refreshAll();
-    const interval = setInterval(refreshAll, 6000); // sync every 6 seconds
-    const onFocus = () => refreshAll();
+    refreshAll(true);
+    const interval = setInterval(() => refreshAll(true), 25000); // sync every 25 seconds across all devices
+    const onFocus = () => refreshAll(false);
+    const onOnline = () => refreshAll(true);
+    const onVisibility = () => {
+      if (document.visibilityState === 'visible') refreshAll(false);
+    };
+
     window.addEventListener('focus', onFocus);
+    window.addEventListener('online', onOnline);
+    document.addEventListener('visibilitychange', onVisibility);
+
     return () => {
       clearInterval(interval);
       window.removeEventListener('focus', onFocus);
+      window.removeEventListener('online', onOnline);
+      document.removeEventListener('visibilitychange', onVisibility);
     };
   }, [refreshAll]);
 
-  // Secure API helper
-  const apiFetch = useCallback(async (url, options = {}) => {
+  // Secure API helper that routes to the correct backend host
+  const apiFetch = useCallback(async (endpoint, options = {}) => {
+    const fullUrl = buildApiUrl(endpoint);
     const headers = {
       'Content-Type': 'application/json',
       ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
       ...(options.headers || {}),
     };
-    const res = await fetch(url, { ...options, headers });
+    const res = await fetch(fullUrl, {
+      ...options,
+      headers,
+      cache: 'no-store',
+    });
     if (res.status === 401) {
       setAuthToken('');
       setCurrentUser(null);
       setIsAdminLoggedIn(false);
       localStorage.removeItem('ignitron_token');
       localStorage.removeItem('ignitron_user');
+      sessionStorage.removeItem('ignitron_admin');
     }
     return res;
   }, [authToken]);
@@ -274,45 +301,64 @@ export function AppProvider({ children }) {
     setCountdownState(val);
     saveToStorage('ignitron_countdown_v4', val);
     try {
-      await apiFetch('/api/settings', {
+      const res = await apiFetch('/api/settings', {
         method: 'PUT',
         body: JSON.stringify({ countdown: val }),
       });
-      refreshSettings();
-    } catch {}
+      if (res.ok) {
+        await refreshSettings();
+        return { success: true };
+      }
+      return { success: false, error: 'Database update failed' };
+    } catch (err) {
+      return { success: false, error: err.message };
+    }
   }, [apiFetch, refreshSettings]);
 
   const setBrochureLink = useCallback(async (val) => {
     setBrochureLinkState(val);
     saveToStorage('ignitron_brochure', val);
     try {
-      await apiFetch('/api/settings', {
+      const res = await apiFetch('/api/settings', {
         method: 'PUT',
         body: JSON.stringify({ brochureLink: val }),
       });
-      refreshSettings();
-    } catch {}
+      if (res.ok) {
+        await refreshSettings();
+        return { success: true };
+      }
+      return { success: false, error: 'Database update failed' };
+    } catch (err) {
+      return { success: false, error: err.message };
+    }
   }, [apiFetch, refreshSettings]);
 
   const setAccommodationLink = useCallback(async (val) => {
     setAccommodationLinkState(val);
     saveToStorage('ignitron_accommodation', val);
     try {
-      await apiFetch('/api/settings', {
+      const res = await apiFetch('/api/settings', {
         method: 'PUT',
         body: JSON.stringify({ accommodationLink: val }),
       });
-      refreshSettings();
-    } catch {}
+      if (res.ok) {
+        await refreshSettings();
+        return { success: true };
+      }
+      return { success: false, error: 'Database update failed' };
+    } catch (err) {
+      return { success: false, error: err.message };
+    }
   }, [apiFetch, refreshSettings]);
 
   // Role-Based Login Handler
   const adminLogin = useCallback(async (username, password) => {
     try {
-      const res = await fetch('/api/auth/login', {
+      const res = await fetch(buildApiUrl('/api/auth/login'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password }),
+        cache: 'no-store',
       });
 
       const data = await res.json();
@@ -329,7 +375,7 @@ export function AppProvider({ children }) {
 
       return { success: true, user: data.user };
     } catch (err) {
-      return { success: false, error: 'Cannot connect to backend server. Make sure server is running on port 5000.' };
+      return { success: false, error: 'Cannot connect to backend server. Make sure backend is reachable.' };
     }
   }, []);
 
@@ -337,12 +383,13 @@ export function AppProvider({ children }) {
   const adminLogout = useCallback(async () => {
     try {
       if (authToken) {
-        await fetch('/api/auth/logout', {
+        await fetch(buildApiUrl('/api/auth/logout'), {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${authToken}`,
           },
+          cache: 'no-store',
         });
       }
     } catch {
@@ -375,6 +422,7 @@ export function AppProvider({ children }) {
       adminLogin,
       adminLogout,
       apiFetch,
+      buildApiUrl,
     }}>
       {children}
     </AppContext.Provider>
