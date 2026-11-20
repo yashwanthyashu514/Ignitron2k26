@@ -250,6 +250,20 @@ export default function CoordinatorDashboard() {
       return;
     }
 
+    const minSize = eventData?.minTeamSize || 1;
+    const maxSize = eventData?.maxTeamSize || 4;
+    const cleanParticipants = teamForm.participants.filter(p => p.name.trim() && p.usn.trim());
+    const totalMembers = 1 + cleanParticipants.length;
+
+    if (totalMembers < minSize) {
+      setTeamFormError(`This event requires at least ${minSize} team member(s). Currently you have entered ${totalMembers} (Leader + ${cleanParticipants.length} participant(s)). Please add ${minSize - totalMembers} more participant(s).`);
+      return;
+    }
+    if (totalMembers > maxSize) {
+      setTeamFormError(`This event allows at most ${maxSize} team member(s). You have entered ${totalMembers} (Leader + ${cleanParticipants.length} participant(s)).`);
+      return;
+    }
+
     try {
       const payload = {
         eventId: eventData?.id || assignedEvent,
@@ -259,7 +273,7 @@ export default function CoordinatorDashboard() {
         leaderUsn: teamForm.leaderUsn,
         leaderCollege: teamForm.leaderCollege,
         leaderMobile: teamForm.leaderMobile,
-        participants: teamForm.participants.filter(p => p.name.trim() && p.usn.trim()),
+        participants: cleanParticipants,
       };
 
       const url = editingTeam ? `/api/teams/${editingTeam._id}` : '/api/teams';
@@ -1837,9 +1851,24 @@ export default function CoordinatorDashboard() {
             <h2 style={{ fontFamily: "'Oxanium', sans-serif", color: '#f8fafc', fontSize: '1.6rem', margin: '0 0 6px 0' }}>
               {editingTeam ? 'Edit Registered Team' : 'Register New Team'}
             </h2>
-            <p style={{ color: '#94a3b8', fontSize: '0.88rem', marginBottom: '20px' }}>
-              Event: <strong style={{ color: '#00E676' }}>{assignedEvent}</strong>
-            </p>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px', marginBottom: '16px' }}>
+              <p style={{ color: '#94a3b8', fontSize: '0.88rem', margin: 0 }}>
+                Event: <strong style={{ color: '#00E676' }}>{assignedEvent}</strong>
+              </p>
+              <span style={{
+                background: 'rgba(56, 189, 248, 0.12)',
+                border: '1px solid rgba(56, 189, 248, 0.35)',
+                color: '#38bdf8',
+                padding: '4px 10px',
+                borderRadius: '8px',
+                fontSize: '0.82rem',
+                fontWeight: 700,
+              }}>
+                👥 Allowed Size: {eventData?.minTeamSize && eventData?.minTeamSize !== eventData?.maxTeamSize
+                  ? `${eventData.minTeamSize} to ${eventData.maxTeamSize} Members`
+                  : `${eventData?.maxTeamSize || 1} Member(s)`}
+              </span>
+            </div>
 
             {teamFormError && (
               <div style={{
@@ -1982,15 +2011,18 @@ export default function CoordinatorDashboard() {
                   <button
                     type="button"
                     onClick={handleAddParticipant}
+                    disabled={1 + teamForm.participants.length >= (eventData?.maxTeamSize || 4)}
                     style={{
-                      background: 'rgba(0, 230, 118, 0.15)',
-                      border: '1px solid #00E676',
-                      color: '#00E676',
+                      background: 1 + teamForm.participants.length >= (eventData?.maxTeamSize || 4)
+                        ? 'rgba(51, 65, 85, 0.4)'
+                        : 'rgba(0, 230, 118, 0.15)',
+                      border: `1px solid ${1 + teamForm.participants.length >= (eventData?.maxTeamSize || 4) ? '#475569' : '#00E676'}`,
+                      color: 1 + teamForm.participants.length >= (eventData?.maxTeamSize || 4) ? '#64748b' : '#00E676',
                       padding: '6px 12px',
                       borderRadius: '8px',
                       fontSize: '0.82rem',
                       fontWeight: 700,
-                      cursor: 'pointer',
+                      cursor: 1 + teamForm.participants.length >= (eventData?.maxTeamSize || 4) ? 'not-allowed' : 'pointer',
                       display: 'flex',
                       alignItems: 'center',
                       gap: '5px',

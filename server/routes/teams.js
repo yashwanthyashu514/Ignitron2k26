@@ -157,9 +157,24 @@ router.post('/', async (req, res) => {
     const prefix = targetName.replace(/[^A-Za-z0-9]/g, '').slice(0, 4).toUpperCase();
     const registrationNo = `IGN-${prefix}-${String(count + 1).padStart(3, '0')}`;
 
-    // Resolve eventId
+    // Resolve eventId and validate team size against minTeamSize and maxTeamSize
     const evDoc = await Event.findOne({ name: new RegExp(`^${targetName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') });
     const resolvedEventId = evDoc ? evDoc.id : (eventId || targetName);
+
+    const minReq = (evDoc && evDoc.minTeamSize) ? evDoc.minTeamSize : 1;
+    const maxReq = (evDoc && evDoc.maxTeamSize) ? evDoc.maxTeamSize : 4;
+    const totalMembers = 1 + cleanParts.length;
+
+    if (totalMembers < minReq) {
+      return res.status(400).json({
+        error: `Event "${evDoc ? evDoc.name : targetName}" requires at least ${minReq} member(s). You provided ${totalMembers} (1 Leader + ${cleanParts.length} participant(s)).`
+      });
+    }
+    if (totalMembers > maxReq) {
+      return res.status(400).json({
+        error: `Event "${evDoc ? evDoc.name : targetName}" allows at most ${maxReq} member(s). You provided ${totalMembers} (1 Leader + ${cleanParts.length} participant(s)).`
+      });
+    }
 
     const team = await Team.create({
       registrationNo,
@@ -218,9 +233,26 @@ router.put('/:id', async (req, res) => {
     if (leaderCollege) team.leaderCollege = leaderCollege.trim();
     if (leaderMobile !== undefined) team.leaderMobile = leaderMobile.trim();
     if (Array.isArray(participants)) {
-      team.participants = participants
+      const cleanParts = participants
         .filter(p => p.name && p.usn)
         .map(p => ({ name: p.name.trim(), usn: p.usn.trim().toUpperCase() }));
+
+      const evDoc = await Event.findOne({ name: new RegExp(`^${team.eventName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') });
+      const minReq = (evDoc && evDoc.minTeamSize) ? evDoc.minTeamSize : 1;
+      const maxReq = (evDoc && evDoc.maxTeamSize) ? evDoc.maxTeamSize : 4;
+      const totalMembers = 1 + cleanParts.length;
+
+      if (totalMembers < minReq) {
+        return res.status(400).json({
+          error: `Event "${team.eventName}" requires at least ${minReq} member(s). Currently has ${totalMembers} (1 Leader + ${cleanParts.length} participant(s)).`
+        });
+      }
+      if (totalMembers > maxReq) {
+        return res.status(400).json({
+          error: `Event "${team.eventName}" allows at most ${maxReq} member(s). Currently has ${totalMembers} (1 Leader + ${cleanParts.length} participant(s)).`
+        });
+      }
+      team.participants = cleanParts;
     }
     await team.save();
 

@@ -1344,8 +1344,8 @@ function EventsManager({ toast }) {
       day: ev.day || 'Day 1',
       venue: ev.venue || '',
       category: ev.category || 'Technical',
-      minTeamSize: ev.minTeamSize !== undefined ? ev.minTeamSize : 1,
-      maxTeamSize: ev.maxTeamSize !== undefined ? ev.maxTeamSize : 4,
+      minTeamSize: ev.minTeamSize !== undefined && ev.minTeamSize !== null ? ev.minTeamSize : 1,
+      maxTeamSize: ev.maxTeamSize !== undefined && ev.maxTeamSize !== null ? ev.maxTeamSize : 4,
       rulebookLink: ev.rulebookLink || '',
       registrationLink: ev.registrationLink || '',
       description: ev.description || '',
@@ -1360,10 +1360,14 @@ function EventsManager({ toast }) {
     }
     setSaving(true);
     try {
+      const minSize = Math.max(1, parseInt(form.minTeamSize, 10) || 1);
+      const rawMax = parseInt(form.maxTeamSize, 10);
+      const maxSize = Math.max(minSize, isNaN(rawMax) ? minSize : rawMax);
+
       const payload = {
         ...form,
-        minTeamSize: Number(form.minTeamSize) || 1,
-        maxTeamSize: Number(form.maxTeamSize) || 1,
+        minTeamSize: minSize,
+        maxTeamSize: maxSize,
       };
 
       if (editing) {
@@ -1449,11 +1453,27 @@ function EventsManager({ toast }) {
           </div>
           <div className="form-group">
             <label className="form-label">Min Team Size</label>
-            <input type="number" min="1" max="20" className="form-input" value={form.minTeamSize} onChange={e => setForm({ ...form, minTeamSize: Number(e.target.value) })} placeholder="1" />
+            <input
+              type="number"
+              min="1"
+              max="20"
+              className="form-input"
+              value={form.minTeamSize ?? ''}
+              onChange={e => setForm({ ...form, minTeamSize: e.target.value === '' ? '' : parseInt(e.target.value, 10) })}
+              placeholder="Min Team Size (e.g. 1 or 2)"
+            />
           </div>
           <div className="form-group">
             <label className="form-label">Max Team Size</label>
-            <input type="number" min="1" max="20" className="form-input" value={form.maxTeamSize} onChange={e => setForm({ ...form, maxTeamSize: Number(e.target.value) })} placeholder="4" />
+            <input
+              type="number"
+              min="1"
+              max="20"
+              className="form-input"
+              value={form.maxTeamSize ?? ''}
+              onChange={e => setForm({ ...form, maxTeamSize: e.target.value === '' ? '' : parseInt(e.target.value, 10) })}
+              placeholder="Max Team Size (e.g. 2 or 4)"
+            />
           </div>
           <div className="form-group">
             <label className="form-label">Rulebook Link</label>
@@ -1489,9 +1509,11 @@ function EventsManager({ toast }) {
                 <span>{ev.day}</span>
                 <span>{ev.time}</span>
                 {ev.venue && <span style={{ color: '#10b981' }}>📍 {ev.venue}</span>}
-                <span>👥 {ev.minTeamSize && ev.minTeamSize !== ev.maxTeamSize ? `${ev.minTeamSize}–${ev.maxTeamSize} Members` : `${ev.maxTeamSize || 1} Members`}</span>
+                <span style={{ color: '#38bdf8' }}>
+                  👥 {ev.minTeamSize && ev.minTeamSize !== ev.maxTeamSize ? `${ev.minTeamSize}–${ev.maxTeamSize} Members` : `${ev.maxTeamSize || 1} Members`} (Min: {ev.minTeamSize || 1}, Max: {ev.maxTeamSize || 1})
+                </span>
                 <span>{ev.category}</span>
-                {ev.coordinatorName && <span style={{ color: '#38bdf8' }}>Coord: {ev.coordinatorName}</span>}
+                {ev.coordinatorName && <span style={{ color: '#a78bfa' }}>Coord: {ev.coordinatorName}</span>}
               </div>
             </div>
             <div className="admin-list-actions">
