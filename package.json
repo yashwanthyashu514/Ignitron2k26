@@ -6,7 +6,6 @@
   "scripts": {
     "start": "node server/server.js",
     "build": "vite build",
-    "postinstall": "vite build",
     "dev": "concurrently -k \"node server/server.js\" \"vite\"",
     "server": "node server/server.js",
     "client": "vite",
