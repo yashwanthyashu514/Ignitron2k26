@@ -112,36 +112,37 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// ── Serve React build in production ──────────────────────────────────────────
-if (process.env.NODE_ENV === 'production') {
-  const distPath = path.join(__dirname, '../dist');
+// ── Serve React build (SPA) ──────────────────────────────────────────────────
+const distPath = path.join(__dirname, '../dist');
+if (fs.existsSync(distPath)) {
   app.use(express.static(distPath));
-  // Express 5 compatible SPA fallback or API status
-  app.use((req, res, next) => {
-    if (req.method === 'GET' && !req.path.startsWith('/api')) {
-      const indexPath = path.join(distPath, 'index.html');
-      if (fs.existsSync(indexPath)) {
-        return res.sendFile(indexPath);
-      }
-      return res.json({
-        status: 'online',
-        service: 'Ignitron 2K26 Backend API Server',
-        database: 'Connected to MongoDB Atlas (Production)',
-        message: 'API is healthy and ready to accept requests',
-        endpoints: {
-          health: '/api/health',
-          events: '/api/events',
-          teams: '/api/teams',
-          timeline: '/api/timeline',
-          scoreboard: '/api/scoreboard',
-          gallery: '/api/gallery',
-          settings: '/api/settings',
-        },
-      });
-    }
-    next();
-  });
 }
+
+// Express 5 compatible SPA fallback or API status
+app.use((req, res, next) => {
+  if (req.method === 'GET' && !req.path.startsWith('/api')) {
+    const indexPath = path.join(distPath, 'index.html');
+    if (fs.existsSync(indexPath)) {
+      return res.sendFile(indexPath);
+    }
+    return res.json({
+      status: 'online',
+      service: 'Ignitron 2K26 Backend API Server',
+      database: 'Connected to MongoDB Atlas (Production)',
+      message: 'API is healthy. Frontend is compiling...',
+      endpoints: {
+        health: '/api/health',
+        events: '/api/events',
+        teams: '/api/teams',
+        timeline: '/api/timeline',
+        scoreboard: '/api/scoreboard',
+        gallery: '/api/gallery',
+        settings: '/api/settings',
+      },
+    });
+  }
+  next();
+});
 
 // ── Scoring criteria helper ───────────────────────────────────────────────────
 function getScoringCriteria(eventName, isHackathon) {
