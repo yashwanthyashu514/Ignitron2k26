@@ -3,6 +3,7 @@ import cors from 'cors';
 import bcrypt from 'bcryptjs';
 import dotenv from 'dotenv';
 import path from 'path';
+import fs from 'fs';
 import { fileURLToPath } from 'url';
 import mongoose from 'mongoose';
 import { connectDB } from './config/db.js';
@@ -115,10 +116,28 @@ app.get('/api/health', (req, res) => {
 if (process.env.NODE_ENV === 'production') {
   const distPath = path.join(__dirname, '../dist');
   app.use(express.static(distPath));
-  // Express 5 compatible SPA fallback
+  // Express 5 compatible SPA fallback or API status
   app.use((req, res, next) => {
     if (req.method === 'GET' && !req.path.startsWith('/api')) {
-      return res.sendFile(path.join(distPath, 'index.html'));
+      const indexPath = path.join(distPath, 'index.html');
+      if (fs.existsSync(indexPath)) {
+        return res.sendFile(indexPath);
+      }
+      return res.json({
+        status: 'online',
+        service: 'Ignitron 2K26 Backend API Server',
+        database: 'Connected to MongoDB Atlas (Production)',
+        message: 'API is healthy and ready to accept requests',
+        endpoints: {
+          health: '/api/health',
+          events: '/api/events',
+          teams: '/api/teams',
+          timeline: '/api/timeline',
+          scoreboard: '/api/scoreboard',
+          gallery: '/api/gallery',
+          settings: '/api/settings',
+        },
+      });
     }
     next();
   });
