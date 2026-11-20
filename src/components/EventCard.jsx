@@ -75,7 +75,11 @@ export default function EventCard({ event, index }) {
         {event.maxTeamSize && (
           <div className="event-meta-item">
             <Users size={14} />
-            <span>Team: {event.maxTeamSize}</span>
+            <span>
+              Team: {event.minTeamSize && event.minTeamSize !== event.maxTeamSize
+                ? `${event.minTeamSize}–${event.maxTeamSize} Members`
+                : `${event.maxTeamSize} ${event.maxTeamSize === 1 ? 'Member' : 'Members'}`}
+            </span>
           </div>
         )}
       </div>

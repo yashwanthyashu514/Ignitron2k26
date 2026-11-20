@@ -23,6 +23,7 @@ const eventSchema = new mongoose.Schema({
   description:      { type: String, default: '' },
   rulebookLink:     { type: String, default: '' },
   registrationLink: { type: String, default: '' },
+  minTeamSize:      { type: Number, default: 1 },
   maxTeamSize:      { type: Number, default: 4 },
   // isHackathon: Code Rush events get 2 rounds; all others get single mark
   isHackathon: { type: Boolean, default: false },

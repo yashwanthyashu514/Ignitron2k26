@@ -63,6 +63,7 @@ router.post('/', verifyToken, requireSuperAdmin, async (req, res) => {
       description,
       rulebookLink,
       registrationLink,
+      minTeamSize,
       maxTeamSize,
       scoringCriteria,
     } = req.body;
@@ -75,15 +76,16 @@ router.post('/', verifyToken, requireSuperAdmin, async (req, res) => {
     const event = new Event({
       id,
       name: name.trim(),
-      time,
-      day,
-      venue,
-      category,
-      club,
-      description,
-      rulebookLink,
-      registrationLink,
-      maxTeamSize: maxTeamSize || 4,
+      time: time ? time.trim() : '',
+      day: day || 'Day 1',
+      venue: venue ? venue.trim() : '',
+      category: category || 'General',
+      club: club ? club.trim() : '',
+      description: description ? description.trim() : '',
+      rulebookLink: rulebookLink ? rulebookLink.trim() : '',
+      registrationLink: registrationLink ? registrationLink.trim() : '',
+      minTeamSize: Number(minTeamSize) > 0 ? Number(minTeamSize) : 1,
+      maxTeamSize: Number(maxTeamSize) > 0 ? Number(maxTeamSize) : 4,
       scoringCriteria: scoringCriteria && scoringCriteria.length > 0 ? scoringCriteria : undefined,
     });
 
@@ -114,7 +116,10 @@ router.put('/:id', verifyToken, requireSuperAdmin, async (req, res) => {
     if (!event) return res.status(404).json({ error: 'Event not found' });
 
     const prevName = event.name;
-    const updates = req.body;
+    const updates = { ...req.body };
+    if (updates.minTeamSize !== undefined) updates.minTeamSize = Number(updates.minTeamSize) || 1;
+    if (updates.maxTeamSize !== undefined) updates.maxTeamSize = Number(updates.maxTeamSize) || 1;
+    if (updates.venue !== undefined) updates.venue = String(updates.venue).trim();
     Object.assign(event, updates);
     await event.save();
     invalidateCache('events');

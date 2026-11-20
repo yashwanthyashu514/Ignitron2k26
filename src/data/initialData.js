@@ -26,7 +26,8 @@ export const defaultEvents = [
     "description": "When Every Parameter Counts. Machine learning and AI model challenge.",
     "rulebookLink": "https://drive.google.com/file/d/1g89MFRx_87PvKMJ-SFTPpFA3o0NXS60a/view?usp=drive_link",
     "registrationLink": "https://unstop.com/p/modelquest-ignitron-2k26-gm-university-davanagere-1796240",
-    "maxTeamSize": 3
+    "minTeamSize": 2,
+    "maxTeamSize": 2
   },
   {
     "id": "3",
@@ -39,7 +40,8 @@ export const defaultEvents = [
     "description": "Hack. Solve. Conquer. National level cybersecurity & ethical hacking battle.",
     "rulebookLink": "https://drive.google.com/file/d/1vArA-EgASmo5xXzjguFeG-Tpm_-dCuWe/view?usp=drive_link",
     "registrationLink": "https://unstop.com/p/capture-the-flag-ctf-ignitron-2k26-gm-university-davanagere-1791574",
-    "maxTeamSize": 3
+    "minTeamSize": 2,
+    "maxTeamSize": 2
   },
   {
     "id": "4",
@@ -100,7 +102,8 @@ export const defaultEvents = [
     "description": "Breakthroughs in Pharmaceutical Tech, Drug Discovery & Healthcare Innovation.",
     "rulebookLink": "https://drive.google.com/file/d/10jiJn6ylnl51-PBxVaQzF8Lw1YkQ6N04/view?usp=drive_link",
     "registrationLink": "https://unstop.com/p/pharmanova-ignitron-2k26-gm-university-davanagere-1795520",
-    "maxTeamSize": 3
+    "minTeamSize": 4,
+    "maxTeamSize": 4
   },
   {
     "id": "10",
@@ -137,7 +140,8 @@ export const defaultEvents = [
     "description": "Where Ideas Meet Insight. Technical research & paper presentation.",
     "rulebookLink": "https://drive.google.com/file/d/1xqB8yMve7hdCtvrhNq-AScvCymc2_ii_/view?usp=drive_link",
     "registrationLink": "https://unstop.com/p/tech-thesis-ignitron-2k26-gm-university-davanagere-1791583",
-    "maxTeamSize": 3
+    "minTeamSize": 1,
+    "maxTeamSize": 2
   },
   {
     "id": "11",
@@ -162,18 +166,20 @@ export const defaultEvents = [
     "description": "Innovate. Ideate. Impact. Pitching bold disruptive startup solutions.",
     "rulebookLink": "https://drive.google.com/file/d/1mkhv2WJE_BHDfvE8WWdcyROweSD6fX9y/view?usp=drive_link",
     "registrationLink": "https://unstop.com/p/ideathon-ignitron-2k26-gm-university-davanagere-1795516",
-    "maxTeamSize": 3
+    "minTeamSize": 1,
+    "maxTeamSize": 2
   },
   {
     "id": "13",
     "name": "Engineer's Eye",
     "time": "02:00 PM – 05:00 PM",
     "day": "Day 2",
-    "venue": "CC Lab, ISE Department",
+    "venue": "AV Room, Central Library",
     "category": "Engineering / Design",
     "description": "Analytical prowess, CAD drafting & reverse-engineering challenge.",
     "rulebookLink": "https://drive.google.com/file/d/1U1R54PFM7E3Wbiawy9fLI54VTtMWxwj_/view?usp=drive_link",
     "registrationLink": "https://unstop.com/p/engineers-eye-ignitron-2k26-gm-university-davanagere-1795515",
+    "minTeamSize": 2,
     "maxTeamSize": 2
   },
   {
@@ -207,12 +213,13 @@ export const defaultEvents = [
     "name": "Food Tech",
     "time": "02:00 PM – 05:00 PM",
     "day": "Day 2",
-    "venue": "GMS – W113",
+    "venue": "GM Business School Seminar Hall 1",
     "category": "Food Technology",
     "description": "Food Processing, Quality Assurance, Sensory Evaluation & Culinary Science.",
     "rulebookLink": "https://drive.google.com/file/d/1uZnMRtU4dGPO8llAiaY8uGJ7fT5_IT4h/view?usp=drive_link",
     "registrationLink": "https://unstop.com/p/food-tech-ignitron-2k26-gm-university-davanagere-1795512",
-    "maxTeamSize": 2
+    "minTeamSize": 4,
+    "maxTeamSize": 4
   },
   {
     "id": "17",
@@ -229,7 +236,7 @@ export const defaultEvents = [
   {
     "id": "18",
     "name": "Startathon",
-    "time": "10:00 AM – 12:30 PM",
+    "time": "02:00 PM – 04:00 PM",
     "day": "Day 2",
     "venue": "GMBS Seminar Hall",
     "category": "Innovation / Entrepreneurship",
@@ -291,7 +298,7 @@ export const defaultEvents = [
     "name": "Cloud NEX",
     "time": "10:00 AM – 05:00 PM",
     "day": "Day 2",
-    "venue": "GM Business Pool Auditorium, New Building",
+    "venue": "GM Business School Auditorium",
     "category": "Cloud / Technology",
     "description": "Architecting the Future of Multi-Cloud, Kubernetes & DevOps Infrastructure.",
     "rulebookLink": "https://drive.google.com/file/d/1KuaC7v7oQPnPJSKRu6VaI1tXyMYb4A5n/view?usp=drive_link",
@@ -619,7 +626,7 @@ export const defaultTimeline = {
       "time": "02:00 PM – 05:00 PM",
       "event": "Engineer's Eye",
       "tagline": "Analytical prowess, CAD drafting & reverse-engineering challenge.",
-      "venue": "CC Lab, ISE Department",
+      "venue": "AV Room, Central Library",
       "club": "Engineering / Design",
       "rulebookLink": "https://drive.google.com/file/d/1U1R54PFM7E3Wbiawy9fLI54VTtMWxwj_/view?usp=drive_link",
       "registrationLink": "https://unstop.com/p/engineers-eye-ignitron-2k26-gm-university-davanagere-1795515"
@@ -646,7 +653,7 @@ export const defaultTimeline = {
       "time": "02:00 PM – 05:00 PM",
       "event": "Food Tech",
       "tagline": "Food Processing, Quality Assurance, Sensory Evaluation & Culinary Science.",
-      "venue": "GMS – W113",
+      "venue": "GM Business School Seminar Hall 1",
       "club": "Food Technology",
       "rulebookLink": "https://drive.google.com/file/d/1uZnMRtU4dGPO8llAiaY8uGJ7fT5_IT4h/view?usp=drive_link",
       "registrationLink": "https://unstop.com/p/food-tech-ignitron-2k26-gm-university-davanagere-1795512"
@@ -661,7 +668,7 @@ export const defaultTimeline = {
       "registrationLink": "https://unstop.com/p/finnovate-ignitron-2k26-gm-university-davanagere-1795511"
     },
     {
-      "time": "10:00 AM – 12:30 PM",
+      "time": "02:00 PM – 04:00 PM",
       "event": "Startathon",
       "tagline": "Ideate. Create. Launch. Build viable business models under time pressure.",
       "venue": "GMBS Seminar Hall",
@@ -709,7 +716,7 @@ export const defaultTimeline = {
       "time": "10:00 AM – 05:00 PM",
       "event": "Cloud NEX",
       "tagline": "Architecting the Future of Multi-Cloud, Kubernetes & DevOps Infrastructure.",
-      "venue": "GM Business Pool Auditorium, New Building",
+      "venue": "GM Business School Auditorium",
       "club": "Cloud / Technology",
       "rulebookLink": "https://drive.google.com/file/d/1KuaC7v7oQPnPJSKRu6VaI1tXyMYb4A5n/view?usp=drive_link",
       "registrationLink": "https://unstop.com/p/cloud-next-ignitron-2k26-gm-university-davanagere-1795504"

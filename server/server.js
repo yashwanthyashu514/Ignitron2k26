@@ -182,6 +182,7 @@ async function seedInitialData() {
           description: ev.description || '',
           rulebookLink: ev.rulebookLink || '',
           registrationLink: ev.registrationLink || '',
+          minTeamSize: ev.minTeamSize || 1,
           maxTeamSize: ev.maxTeamSize || 4,
           isHackathon: isHack,
           scoringCriteria: getScoringCriteria(ev.name, isHack),

@@ -1324,18 +1324,32 @@ function EventsManager({ toast }) {
   const [editing, setEditing] = useState(null);
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({
-    name: '', time: '', day: 'Day 1', rulebookLink: '', registrationLink: '',
-    description: '', category: 'Technical', maxTeamSize: 4, venue: '',
+    name: '', time: '', day: 'Day 1', venue: '', rulebookLink: '', registrationLink: '',
+    description: '', category: 'Technical', minTeamSize: 1, maxTeamSize: 4,
   });
 
   const resetForm = () => {
-    setForm({ name: '', time: '', day: 'Day 1', rulebookLink: '', registrationLink: '', description: '', category: 'Technical', maxTeamSize: 4, venue: '' });
+    setForm({
+      name: '', time: '', day: 'Day 1', venue: '', rulebookLink: '', registrationLink: '',
+      description: '', category: 'Technical', minTeamSize: 1, maxTeamSize: 4,
+    });
     setEditing(null);
   };
 
   const startEdit = (ev) => {
     setEditing(ev.id);
-    setForm({ ...ev });
+    setForm({
+      name: ev.name || '',
+      time: ev.time || '',
+      day: ev.day || 'Day 1',
+      venue: ev.venue || '',
+      category: ev.category || 'Technical',
+      minTeamSize: ev.minTeamSize !== undefined ? ev.minTeamSize : 1,
+      maxTeamSize: ev.maxTeamSize !== undefined ? ev.maxTeamSize : 4,
+      rulebookLink: ev.rulebookLink || '',
+      registrationLink: ev.registrationLink || '',
+      description: ev.description || '',
+    });
     document.getElementById('event-form')?.scrollIntoView({ behavior: 'smooth' });
   };
 
@@ -1346,14 +1360,20 @@ function EventsManager({ toast }) {
     }
     setSaving(true);
     try {
+      const payload = {
+        ...form,
+        minTeamSize: Number(form.minTeamSize) || 1,
+        maxTeamSize: Number(form.maxTeamSize) || 1,
+      };
+
       if (editing) {
         const res = await apiFetch(`/api/events/${editing}`, {
           method: 'PUT',
-          body: JSON.stringify(form),
+          body: JSON.stringify(payload),
         });
         if (res.ok) {
           await refreshEvents();
-          toast('Event updated successfully in central database!');
+          toast('Event updated successfully in central database & synced across all devices!');
           resetForm();
         } else {
           const errData = await res.json().catch(() => ({}));
@@ -1362,11 +1382,11 @@ function EventsManager({ toast }) {
       } else {
         const res = await apiFetch('/api/events', {
           method: 'POST',
-          body: JSON.stringify(form),
+          body: JSON.stringify(payload),
         });
         if (res.ok) {
           await refreshEvents();
-          toast('Event created and saved in central database!');
+          toast('Event created and saved in central database & synced across all devices!');
           resetForm();
         } else {
           const errData = await res.json().catch(() => ({}));
@@ -1408,30 +1428,40 @@ function EventsManager({ toast }) {
           </div>
           <div className="form-group">
             <label className="form-label">Time</label>
-            <input className="form-input" value={form.time} onChange={e => setForm({ ...form, time: e.target.value })} placeholder="10:00 AM - 1:00 PM" />
+            <input className="form-input" value={form.time} onChange={e => setForm({ ...form, time: e.target.value })} placeholder="02:00 PM – 05:00 PM" />
           </div>
           <div className="form-group">
             <label className="form-label">Day</label>
             <select className="form-input" value={form.day} onChange={e => setForm({ ...form, day: e.target.value })}>
               <option value="Day 1">Day 1</option>
               <option value="Day 2">Day 2</option>
+              <option value="Day 1 & Day 2">Day 1 & Day 2</option>
+              <option value="Day 3">Day 3</option>
             </select>
+          </div>
+          <div className="form-group">
+            <label className="form-label">Venue</label>
+            <input className="form-input" value={form.venue} onChange={e => setForm({ ...form, venue: e.target.value })} placeholder="e.g. Central Library, GMS Auditorium" />
           </div>
           <div className="form-group">
             <label className="form-label">Category</label>
             <input className="form-input" value={form.category} onChange={e => setForm({ ...form, category: e.target.value })} placeholder="Category" />
           </div>
           <div className="form-group">
+            <label className="form-label">Min Team Size</label>
+            <input type="number" min="1" max="20" className="form-input" value={form.minTeamSize} onChange={e => setForm({ ...form, minTeamSize: Number(e.target.value) })} placeholder="1" />
+          </div>
+          <div className="form-group">
+            <label className="form-label">Max Team Size</label>
+            <input type="number" min="1" max="20" className="form-input" value={form.maxTeamSize} onChange={e => setForm({ ...form, maxTeamSize: Number(e.target.value) })} placeholder="4" />
+          </div>
+          <div className="form-group">
             <label className="form-label">Rulebook Link</label>
-            <input className="form-input" value={form.rulebookLink} onChange={e => setForm({ ...form, rulebookLink: e.target.value })} placeholder="https://..." />
+            <input className="form-input" value={form.rulebookLink} onChange={e => setForm({ ...form, rulebookLink: e.target.value })} placeholder="https://drive.google.com/..." />
           </div>
           <div className="form-group">
             <label className="form-label">Registration Link</label>
             <input className="form-input" value={form.registrationLink} onChange={e => setForm({ ...form, registrationLink: e.target.value })} placeholder="https://unstop.com/..." />
-          </div>
-          <div className="form-group">
-            <label className="form-label">Max Team Size</label>
-            <input type="number" className="form-input" value={form.maxTeamSize} onChange={e => setForm({ ...form, maxTeamSize: Number(e.target.value) })} placeholder="4" />
           </div>
           <div className="form-group" style={{ gridColumn: '1 / -1' }}>
             <label className="form-label">Description</label>
@@ -1458,6 +1488,8 @@ function EventsManager({ toast }) {
               <div className="admin-list-meta">
                 <span>{ev.day}</span>
                 <span>{ev.time}</span>
+                {ev.venue && <span style={{ color: '#10b981' }}>📍 {ev.venue}</span>}
+                <span>👥 {ev.minTeamSize && ev.minTeamSize !== ev.maxTeamSize ? `${ev.minTeamSize}–${ev.maxTeamSize} Members` : `${ev.maxTeamSize || 1} Members`}</span>
                 <span>{ev.category}</span>
                 {ev.coordinatorName && <span style={{ color: '#38bdf8' }}>Coord: {ev.coordinatorName}</span>}
               </div>
