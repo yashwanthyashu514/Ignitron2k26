@@ -286,6 +286,24 @@ async function seedInitialData() {
   }
 }
 
+// ── Render / Cloud Keep-Alive Auto-Pinger ────────────────────────────────────
+function setupKeepAlivePinger() {
+  const pingUrl = process.env.RENDER_EXTERNAL_URL || process.env.PING_URL || process.env.BACKEND_URL;
+  if (!pingUrl) return;
+
+  const targetHealthUrl = `${pingUrl.replace(/\/+$/, '')}/api/health`;
+  console.log(`  🔔  Keep-Alive Pinger active for: ${targetHealthUrl} (every 10 minutes)`);
+
+  setInterval(async () => {
+    try {
+      const res = await fetch(targetHealthUrl, { cache: 'no-store' });
+      console.log(`[Keep-Alive Auto-Ping] ${new Date().toLocaleTimeString()} -> ${res.status} OK`);
+    } catch (err) {
+      console.warn(`[Keep-Alive Auto-Ping Warn] ${err.message}`);
+    }
+  }, 10 * 60 * 1000); // Every 10 minutes (Render sleeps at 15m)
+}
+
 // ── Start ─────────────────────────────────────────────────────────────────────
 async function startServer() {
   const server = app.listen(PORT, () => {
@@ -294,6 +312,7 @@ async function startServer() {
     console.log(`╚════════════════════════════════════════╝`);
     console.log(`  🚀  http://localhost:${PORT}`);
     console.log(`  📊  API Health: http://localhost:${PORT}/api/health\n`);
+    setupKeepAlivePinger();
   });
 
   server.on('error', (err) => {

@@ -1,18 +1,26 @@
 services:
   - type: web
-    name: ignitron2k26
-    runtime: node
+    name: ignitron2k26-backend
+    env: node
     plan: free
-    region: singapore
-    buildCommand: npm install && npm run build
-    startCommand: npm start
+    region: oregon
+    buildCommand: npm install
+    startCommand: node server/server.js
+    healthCheckPath: /api/health
     envVars:
       - key: NODE_ENV
         value: production
+      - key: PORT
+        value: 10000
       - key: MONGODB_URI
         sync: false
       - key: JWT_SECRET
-        generateValue: true
-      - key: PORT
-        value: 10000
-
+        sync: false
+      - key: CLOUDINARY_CLOUD_NAME
+        value: dlvjwpwte
+      - key: CLOUDINARY_API_KEY
+        value: "693929685976346"
+      - key: CLOUDINARY_API_SECRET
+        sync: false
+      - key: CLOUDINARY_URL
+        sync: false

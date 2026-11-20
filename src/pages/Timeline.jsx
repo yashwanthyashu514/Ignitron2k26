@@ -74,7 +74,7 @@ export default function Timeline() {
 
   // Total count
   const totalEventsCount = useMemo(() => {
-    return allEventsGrouped.reduce((sum, g) => sum + g.events.length, 0);
+    return allEventsGrouped.reduce((sum, g) => sum + (Array.isArray(g.events) ? g.events.length : 0), 0);
   }, [allEventsGrouped]);
 
   // Filtered by selected day and search query
@@ -84,7 +84,7 @@ export default function Timeline() {
     return allEventsGrouped
       .filter(g => selectedDay === 'all' || g.key === selectedDay)
       .map(group => {
-        let items = group.events;
+        let items = Array.isArray(group.events) ? group.events : [];
         if (q) {
           items = items.filter(ev => {
             const matchName = (ev.event || '').toLowerCase().includes(q);
@@ -104,7 +104,7 @@ export default function Timeline() {
   }, [allEventsGrouped, selectedDay, search]);
 
   const totalFilteredCount = useMemo(() => {
-    return filteredGroups.reduce((acc, g) => acc + g.events.length, 0);
+    return filteredGroups.reduce((acc, g) => acc + (Array.isArray(g.events) ? g.events.length : 0), 0);
   }, [filteredGroups]);
 
   return (

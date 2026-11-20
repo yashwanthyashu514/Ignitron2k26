@@ -4,7 +4,8 @@ import { Trophy, Medal, Award, Crown } from 'lucide-react';
 export default function Scoreboard() {
   const { scoreboard } = useApp();
 
-  const sorted = [...scoreboard].sort((a, b) => b.score - a.score);
+  const safeScoreboard = Array.isArray(scoreboard) ? scoreboard : [];
+  const sorted = [...safeScoreboard].sort((a, b) => (b.score || 0) - (a.score || 0));
 
   const rankIcon = (rank) => {
     if (rank === 1) return <Trophy size={22} className="rank-gold" />;
