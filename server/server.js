@@ -102,9 +102,12 @@ app.use('/api/gallery', galleryRoutes);
 app.use('/api/upload', uploadRoutes);
 
 app.get('/api/health', (req, res) => {
+  const distIndexPath = path.join(__dirname, '../dist/index.html');
   res.json({
     status: 'ok',
-    service: 'Ignitron 2K26 Backend',
+    service: 'Ignitron 2K26 Backend & Frontend',
+    hasDist: fs.existsSync(distIndexPath),
+    frontendReady: fs.existsSync(distIndexPath),
     timestamp: new Date(),
     mongoConfigured: !!process.env.MONGODB_URI,
     mongoPrefix: process.env.MONGODB_URI ? process.env.MONGODB_URI.substring(0, 16) : 'MISSING',
