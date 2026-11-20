@@ -74,10 +74,20 @@ export default function Gallery() {
     if (Array.isArray(gallery) && gallery.length > 0) {
       const featured = gallery.filter(g => g.isHomeFeatured);
       const list = featured.length > 0 ? featured : gallery;
-      return list.map((g, i) => ({
+      // Defensive deduplication safeguard by image source
+      const seen = new Set();
+      const uniqueList = [];
+      for (const item of list) {
+        const key = (item.src || item.image || '').trim();
+        if (key && !seen.has(key)) {
+          seen.add(key);
+          uniqueList.push(item);
+        }
+      }
+      return uniqueList.map((g, i) => ({
         id: g._id || g.id || i + 1,
-        image: g.src,
-        title: g.caption || 'Ignitron 2K25',
+        image: g.src || g.image,
+        title: g.caption || `Ignitron 2K25 Highlights #${i + 1}`,
         year: g.year || '2K25',
       }));
     }

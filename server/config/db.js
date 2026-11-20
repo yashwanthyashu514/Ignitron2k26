@@ -1,5 +1,9 @@
 import mongoose from 'mongoose';
 
+// Enable command buffering globally so queries gracefully wait for connection
+mongoose.set('bufferCommands', true);
+mongoose.set('bufferTimeoutMS', 30000);
+
 // Cache connection in global scope for Vercel Serverless function container reuse
 let cached = global.mongoose;
 

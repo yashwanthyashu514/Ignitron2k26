@@ -4,6 +4,7 @@ const gallerySchema = new mongoose.Schema({
   src: {
     type: String,
     required: true,
+    unique: true,
     trim: true,
   },
   caption: {
