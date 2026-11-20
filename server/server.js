@@ -311,16 +311,22 @@ function setupKeepAlivePinger() {
   if (!pingUrl) return;
 
   const targetHealthUrl = `${pingUrl.replace(/\/+$/, '')}/api/health`;
-  console.log(`  🔔  Keep-Alive Pinger active for: ${targetHealthUrl} (every 10 minutes)`);
+  const intervalMs = process.env.PING_INTERVAL_MS ? parseInt(process.env.PING_INTERVAL_MS, 10) : 5000; // 5 seconds
+  console.log(`  🔔  Keep-Alive Pinger active for: ${targetHealthUrl} (every ${intervalMs / 1000} seconds)`);
 
+  let pingCount = 0;
   setInterval(async () => {
     try {
       const res = await fetch(targetHealthUrl, { cache: 'no-store' });
-      console.log(`[Keep-Alive Auto-Ping] ${new Date().toLocaleTimeString()} -> ${res.status} OK`);
+      pingCount++;
+      // Log periodic summary so Render console stays clean
+      if (pingCount % 60 === 1) {
+        console.log(`[Keep-Alive Auto-Ping] ${new Date().toLocaleTimeString()} -> ${res.status} OK (Total Pings: ${pingCount})`);
+      }
     } catch (err) {
       console.warn(`[Keep-Alive Auto-Ping Warn] ${err.message}`);
     }
-  }, 10 * 60 * 1000); // Every 10 minutes (Render sleeps at 15m)
+  }, intervalMs);
 }
 
 // ── Start ─────────────────────────────────────────────────────────────────────
