@@ -1337,7 +1337,7 @@ function EventsManager({ toast }) {
   };
 
   const startEdit = (ev) => {
-    setEditing(ev.id);
+    setEditing(ev.id || ev._id || ev.name);
     setForm({
       name: ev.name || '',
       time: ev.time || '',
@@ -1371,7 +1371,7 @@ function EventsManager({ toast }) {
       };
 
       if (editing) {
-        const res = await apiFetch(`/api/events/${editing}`, {
+        const res = await apiFetch(`/api/events/${encodeURIComponent(editing)}`, {
           method: 'PUT',
           body: JSON.stringify(payload),
         });

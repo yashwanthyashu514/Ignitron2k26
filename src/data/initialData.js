@@ -78,7 +78,8 @@ export const defaultEvents = [
     "description": "Trade. Strategize. Dominate. Business acumen and marketing strategy faceoff.",
     "rulebookLink": "https://drive.google.com/file/d/1NkoFLq8BIW82x0gb4ATYpfgxieEKe7Ww/view?usp=drive_link",
     "registrationLink": "https://unstop.com/p/market-mavericks-ignitron-2k26-gm-university-davanagere-1795522",
-    "maxTeamSize": 3
+    "minTeamSize": 4,
+    "maxTeamSize": 6
   },
   {
     "id": "8",

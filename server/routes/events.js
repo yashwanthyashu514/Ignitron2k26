@@ -8,11 +8,15 @@ import { getCached, setCached, invalidateCache } from '../utils/cache.js';
 const router = express.Router();
 
 function buildIdFilter(param) {
-  const isObj = mongoose.isValidObjectId(param);
+  if (!param) return { id: '__none__' };
+  const str = String(param).trim();
+  const isObj = mongoose.isValidObjectId(str);
+  const escaped = str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   return {
     $or: [
-      { id: param },
-      ...(isObj ? [{ _id: param }] : []),
+      { id: str },
+      { name: new RegExp(`^${escaped}$`, 'i') },
+      ...(isObj ? [{ _id: new mongoose.Types.ObjectId(str) }] : []),
     ],
   };
 }
@@ -117,10 +121,48 @@ router.put('/:id', verifyToken, requireSuperAdmin, async (req, res) => {
 
     const prevName = event.name;
     const updates = { ...req.body };
-    if (updates.minTeamSize !== undefined) updates.minTeamSize = Number(updates.minTeamSize) || 1;
-    if (updates.maxTeamSize !== undefined) updates.maxTeamSize = Number(updates.maxTeamSize) || 1;
-    if (updates.venue !== undefined) updates.venue = String(updates.venue).trim();
-    Object.assign(event, updates);
+
+    if (updates.minTeamSize !== undefined) {
+      event.minTeamSize = Math.max(1, parseInt(updates.minTeamSize, 10) || 1);
+      event.markModified('minTeamSize');
+    }
+    if (updates.maxTeamSize !== undefined) {
+      event.maxTeamSize = Math.max(event.minTeamSize || 1, parseInt(updates.maxTeamSize, 10) || 1);
+      event.markModified('maxTeamSize');
+    }
+    if (updates.venue !== undefined) {
+      event.venue = String(updates.venue).trim();
+      event.markModified('venue');
+    }
+    if (updates.time !== undefined) {
+      event.time = String(updates.time).trim();
+      event.markModified('time');
+    }
+    if (updates.day !== undefined) {
+      event.day = String(updates.day).trim();
+      event.markModified('day');
+    }
+    if (updates.description !== undefined) {
+      event.description = String(updates.description).trim();
+      event.markModified('description');
+    }
+    if (updates.category !== undefined) {
+      event.category = String(updates.category).trim();
+      event.markModified('category');
+    }
+    if (updates.rulebookLink !== undefined) {
+      event.rulebookLink = String(updates.rulebookLink).trim();
+      event.markModified('rulebookLink');
+    }
+    if (updates.registrationLink !== undefined) {
+      event.registrationLink = String(updates.registrationLink).trim();
+      event.markModified('registrationLink');
+    }
+    if (updates.name && updates.name.trim()) {
+      event.name = updates.name.trim();
+      event.markModified('name');
+    }
+
     await event.save();
     invalidateCache('events');
 
